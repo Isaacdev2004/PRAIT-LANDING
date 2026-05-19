@@ -1,4 +1,4 @@
-import { useState, useRef, type ReactNode, type FormEvent } from "react";
+import { useState, useRef, useEffect, type ReactNode, type FormEvent } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import {
   GraduationCap, Briefcase, TrendingUp, CheckCircle, Globe, BookOpen,
   MapPin, ArrowRight, Star, Building2, Users, Award, Zap, Menu, X
 } from "lucide-react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence, animate as animateValue } from "framer-motion";
 import { FaLinkedinIn, FaFacebookF, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa6";
 
 const fadeUp = {
@@ -41,6 +41,22 @@ function AnimateOnScroll({ children, className = "", delay = 0 }: { children: Re
       {children}
     </motion.div>
   );
+}
+
+function AnimatedCounter({ to, suffix = "", duration = 2 }: { to: number; suffix?: string; duration?: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  useEffect(() => {
+    if (!inView || !ref.current) return;
+    const el = ref.current;
+    const controls = animateValue(0, to, {
+      duration,
+      ease: [0.16, 1, 0.3, 1],
+      onUpdate(v) { el.textContent = Math.round(v) + suffix; },
+    });
+    return () => controls.stop();
+  }, [inView, to, suffix, duration]);
+  return <span ref={ref}>0{suffix}</span>;
 }
 
 const TABS = [
@@ -118,6 +134,9 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("domestic");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const stepsLineRef = useRef(null);
+  const stepsLineInView = useInView(stepsLineRef, { once: true, margin: "-60px" });
 
   const [matcherData, setMatcherData] = useState({ currentRole: "", skills: "", goals: "" });
   const [isMatching, setIsMatching] = useState(false);
@@ -230,9 +249,19 @@ export default function Home() {
 
       {/* ── HERO ── */}
       <section id="hero" className="relative pt-24 pb-28 lg:pt-36 lg:pb-40 overflow-hidden">
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-primary/5 blur-3xl -translate-y-1/2 translate-x-1/4" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-secondary/5 blur-3xl translate-y-1/2 -translate-x-1/4" />
+        <div className="absolute inset-0 -z-10 pointer-events-none">
+          <div className="float-slow absolute top-[-100px] right-[-80px] w-[650px] h-[650px] rounded-full bg-primary/6 blur-3xl" />
+          <div className="float-medium absolute bottom-[-60px] left-[-60px] w-[500px] h-[500px] rounded-full bg-secondary/6 blur-3xl" />
+          <div className="float-fast absolute top-[40%] right-[20%] w-[250px] h-[250px] rounded-full bg-accent/5 blur-2xl" />
+          {/* Decorative grid dots */}
+          <svg className="absolute inset-0 w-full h-full opacity-[0.025]" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="dot-grid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="1.5" fill="hsl(var(--primary))" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#dot-grid)" />
+          </svg>
         </div>
         <div className="container mx-auto px-4">
           <motion.div initial="hidden" animate="show" variants={stagger} className="max-w-5xl mx-auto text-center">
@@ -243,7 +272,7 @@ export default function Home() {
             </motion.div>
             <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-4 leading-[1.1]">
               Bridging Ambition<br />
-              <span className="text-primary">with Opportunity.</span>
+              <span className="shimmer-gradient">with Opportunity.</span>
             </motion.h1>
             <motion.p variants={fadeUp} className="text-lg md:text-xl text-muted-foreground mb-3 font-medium">
               Fast-Track Your Career in Canada and Beyond.
@@ -293,44 +322,51 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── TRUST STRIP ── */}
-      <section className="border-y bg-muted/20 py-8">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-x-10 gap-y-4 text-center">
-            {[
-              { icon: Award, label: "Fully Recognized Diplomas" },
-              { icon: Zap, label: "OSAP & Government Funding Eligible" },
-              { icon: BookOpen, label: "Fast-Tracked Flexible Schedules" },
-              { icon: Building2, label: "Partner to Top Canadian Colleges" },
-              { icon: Users, label: "Tailored Solutions for Your Goals" },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                <item.icon className="h-4 w-4 text-primary flex-shrink-0" />
-                {item.label}
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* ── TRUST STRIP (marquee) ── */}
+      <section className="border-y bg-muted/20 py-6 overflow-hidden">
+        {(() => {
+          const items = [
+            { icon: Award, label: "Fully Recognized Diplomas" },
+            { icon: Zap, label: "OSAP & Government Funding Eligible" },
+            { icon: BookOpen, label: "Fast-Tracked Flexible Schedules" },
+            { icon: Building2, label: "Partner to Top Canadian Colleges" },
+            { icon: Users, label: "Tailored Solutions for Your Goals" },
+            { icon: Globe, label: "Canada · Africa · Global" },
+            { icon: CheckCircle, label: "100% Dedicated Support" },
+          ];
+          const doubled = [...items, ...items];
+          return (
+            <div className="marquee-track flex items-center gap-12 w-max">
+              {doubled.map((item, i) => (
+                <div key={i} className="flex items-center gap-2.5 text-sm font-semibold text-muted-foreground whitespace-nowrap px-2">
+                  <item.icon className="h-4 w-4 text-primary flex-shrink-0" />
+                  {item.label}
+                  <span className="ml-4 text-border/60">·</span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </section>
 
       {/* ── SOCIAL PROOF NUMBERS ── */}
       <section className="py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4">
-          <AnimateOnScroll>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-              {[
-                { num: "500+", label: "Students Placed" },
-                { num: "10+", label: "Programs Available" },
-                { num: "3", label: "Countries Served" },
-                { num: "100%", label: "Dedicated Support" },
-              ].map((s, i) => (
-                <div key={i} className="flex flex-col items-center gap-1">
-                  <span className="text-4xl font-bold text-accent">{s.num}</span>
-                  <span className="text-sm text-primary-foreground/70 uppercase tracking-wider font-medium">{s.label}</span>
-                </div>
-              ))}
-            </div>
-          </AnimateOnScroll>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {[
+              { to: 500, suffix: "+", label: "Students Placed" },
+              { to: 10,  suffix: "+", label: "Programs Available" },
+              { to: 3,   suffix: "",  label: "Countries Served" },
+              { to: 100, suffix: "%", label: "Dedicated Support" },
+            ].map((s, i) => (
+              <AnimateOnScroll key={i} delay={i * 0.1} className="flex flex-col items-center gap-1">
+                <span className="text-4xl md:text-5xl font-bold text-accent">
+                  <AnimatedCounter to={s.to} suffix={s.suffix} duration={2.2} />
+                </span>
+                <span className="text-sm text-primary-foreground/70 uppercase tracking-wider font-medium">{s.label}</span>
+              </AnimateOnScroll>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -379,19 +415,28 @@ export default function Home() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {TABS.map((tab, i) => (
               <AnimateOnScroll key={tab.id} delay={i * 0.1}>
-                <Card className={`group border-none shadow-md hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden h-full bg-gradient-to-b from-card to-${tab.color}/5`}>
-                  <CardContent className="p-7 flex flex-col h-full">
-                    <div className={`h-12 w-12 rounded-xl bg-${tab.color}/10 flex items-center justify-center mb-5 text-${tab.color} group-hover:scale-110 transition-transform`}>
-                      <tab.icon className="h-6 w-6" />
-                    </div>
-                    <h3 className="text-lg font-bold mb-2">{tab.headline}</h3>
-                    <p className="text-sm text-muted-foreground mb-5 flex-1 leading-relaxed">{tab.subhead}</p>
-                    <Button variant="ghost" size="sm" className={`rounded-full w-full border border-${tab.color}/20 hover:bg-${tab.color}/5 text-${tab.color} group/btn`}
-                      onClick={() => { setActiveTab(tab.id); scrollTo("programs"); }} data-testid={`solution-${tab.id}-btn`}>
-                      {tab.cta} <ArrowRight className="h-3 w-3 ml-1 group-hover/btn:translate-x-1 transition-transform" />
-                    </Button>
-                  </CardContent>
-                </Card>
+                <motion.div
+                  whileHover={{ y: -10, transition: { duration: 0.25, ease: "easeOut" } }}
+                  className="h-full"
+                >
+                  <Card className={`group border-none shadow-md hover:shadow-2xl transition-shadow duration-300 rounded-2xl overflow-hidden h-full bg-gradient-to-b from-card to-${tab.color}/5`}>
+                    <CardContent className="p-7 flex flex-col h-full">
+                      <motion.div
+                        whileHover={{ scale: 1.15, rotate: 5 }}
+                        transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                        className={`h-12 w-12 rounded-xl bg-${tab.color}/10 flex items-center justify-center mb-5 text-${tab.color}`}
+                      >
+                        <tab.icon className="h-6 w-6" />
+                      </motion.div>
+                      <h3 className="text-lg font-bold mb-2">{tab.headline}</h3>
+                      <p className="text-sm text-muted-foreground mb-5 flex-1 leading-relaxed">{tab.subhead}</p>
+                      <Button variant="ghost" size="sm" className={`rounded-full w-full border border-${tab.color}/20 hover:bg-${tab.color}/5 text-${tab.color} group/btn`}
+                        onClick={() => { setActiveTab(tab.id); scrollTo("programs"); }} data-testid={`solution-${tab.id}-btn`}>
+                        {tab.cta} <ArrowRight className="h-3 w-3 ml-1 group-hover/btn:translate-x-1 transition-transform" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </AnimateOnScroll>
             ))}
           </div>
@@ -406,20 +451,33 @@ export default function Home() {
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">A Proven Framework for Success</h2>
             <p className="text-lg text-muted-foreground">Complex processes broken into clear, actionable steps.</p>
           </AnimateOnScroll>
+          {/* Animated connector line */}
           <div className="grid md:grid-cols-4 gap-8 relative">
-            <div className="hidden md:block absolute top-10 left-[14%] right-[14%] h-px bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20" />
+            <div ref={stepsLineRef} className="hidden md:block absolute top-10 left-[14%] right-[14%] h-px bg-border/40 overflow-hidden">
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={stepsLineInView ? { scaleX: 1 } : { scaleX: 0 }}
+                transition={{ duration: 1.4, ease: "easeOut", delay: 0.3 }}
+                style={{ originX: 0 }}
+                className="absolute inset-0 bg-gradient-to-r from-primary via-secondary to-accent"
+              />
+            </div>
             {[
               { step: "01", title: "Discover", desc: "We analyze your background, goals, and map the optimal route for you specifically.", icon: MapPin, color: "primary" },
               { step: "02", title: "Plan", desc: "We develop a concrete, personalized strategy for admission, training, or business growth.", icon: BookOpen, color: "secondary" },
               { step: "03", title: "Apply & Train", desc: "We execute applications and enroll you in vital skill-building programs.", icon: Briefcase, color: "secondary" },
               { step: "04", title: "Succeed", desc: "Land in Canada, start your new career, grow your business — and thrive.", icon: CheckCircle, color: "accent" },
             ].map((s, i) => (
-              <AnimateOnScroll key={i} delay={i * 0.12} className="flex flex-col items-center text-center">
-                <div className={`h-20 w-20 rounded-full bg-background border-2 border-${s.color}/20 shadow-lg flex items-center justify-center mb-5 z-10 relative`}>
+              <AnimateOnScroll key={i} delay={i * 0.14} className="flex flex-col items-center text-center">
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 18 }}
+                  className={`h-20 w-20 rounded-full bg-background border-2 border-${s.color}/30 shadow-lg flex items-center justify-center mb-5 z-10 relative`}
+                >
                   <div className={`h-16 w-16 rounded-full bg-${s.color}/10 flex items-center justify-center text-${s.color}`}>
                     <s.icon className="h-8 w-8" />
                   </div>
-                </div>
+                </motion.div>
                 <span className={`text-xs font-bold text-${s.color} mb-1 tracking-widest uppercase`}>Step {s.step}</span>
                 <h3 className="text-lg font-bold mb-2">{s.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
@@ -463,41 +521,57 @@ export default function Home() {
           </div>
 
           {/* Tab Content */}
-          <motion.div key={activeTab} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
-            <div className="max-w-5xl mx-auto bg-background rounded-3xl shadow-xl border overflow-hidden">
-              <div className="grid md:grid-cols-2">
-                <div className={`bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-10`}>
-                  <div className={`h-14 w-14 rounded-2xl bg-white/10 flex items-center justify-center mb-6`}>
-                    <activeTabData.icon className="h-7 w-7 text-white" />
+          <AnimatePresence mode="wait">
+            <motion.div key={activeTab} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }}>
+              <div className="max-w-5xl mx-auto bg-background rounded-3xl shadow-xl border overflow-hidden">
+                <div className="grid md:grid-cols-2">
+                  <div className={`bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-10`}>
+                    <motion.div
+                      initial={{ scale: 0.7, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
+                      className={`h-14 w-14 rounded-2xl bg-white/10 flex items-center justify-center mb-6`}
+                    >
+                      <activeTabData.icon className="h-7 w-7 text-white" />
+                    </motion.div>
+                    <h3 className="text-2xl font-bold mb-2">{activeTabData.headline}</h3>
+                    <p className="text-primary-foreground/80 mb-8">{activeTabData.subhead}</p>
+                    <motion.ul
+                      className="space-y-3"
+                      initial="hidden"
+                      animate="show"
+                      variants={{ show: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } } }}
+                    >
+                      {activeTabData.bullets.map((b, i) => (
+                        <motion.li
+                          key={i}
+                          variants={{ hidden: { opacity: 0, x: -16 }, show: { opacity: 1, x: 0, transition: { duration: 0.4 } } }}
+                          className="flex items-start gap-3 text-sm"
+                        >
+                          <CheckCircle className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+                          <span>{b}</span>
+                        </motion.li>
+                      ))}
+                    </motion.ul>
                   </div>
-                  <h3 className="text-2xl font-bold mb-2">{activeTabData.headline}</h3>
-                  <p className="text-primary-foreground/80 mb-8">{activeTabData.subhead}</p>
-                  <ul className="space-y-3">
-                    {activeTabData.bullets.map((b, i) => (
-                      <li key={i} className="flex items-start gap-3 text-sm">
-                        <CheckCircle className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
-                        <span>{b}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="p-10 flex flex-col justify-center">
-                  <h4 className="text-xl font-bold mb-4 text-foreground">Ready to get started?</h4>
-                  <p className="text-muted-foreground mb-6 leading-relaxed text-sm">
-                    Book a free, no-obligation consultation with one of our pathway specialists. We'll assess your situation and map the clearest route to your goals.
-                  </p>
-                  <div className="space-y-3">
-                    <Button className="w-full bg-accent hover:bg-accent/90 text-white rounded-full shadow-md" onClick={() => scrollTo("contact")} data-testid={`tab-cta-${activeTab}`}>
-                      {activeTabData.cta} <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                    <Button variant="outline" className="w-full rounded-full" onClick={() => scrollTo("contact")}>
-                      Ask a Question
-                    </Button>
+                  <div className="p-10 flex flex-col justify-center">
+                    <h4 className="text-xl font-bold mb-4 text-foreground">Ready to get started?</h4>
+                    <p className="text-muted-foreground mb-6 leading-relaxed text-sm">
+                      Book a free, no-obligation consultation with one of our pathway specialists. We'll assess your situation and map the clearest route to your goals.
+                    </p>
+                    <div className="space-y-3">
+                      <Button className="w-full bg-accent hover:bg-accent/90 text-white rounded-full shadow-md" onClick={() => scrollTo("contact")} data-testid={`tab-cta-${activeTab}`}>
+                        {activeTabData.cta} <ArrowRight className="h-4 w-4 ml-2" />
+                      </Button>
+                      <Button variant="outline" className="w-full rounded-full" onClick={() => scrollTo("contact")}>
+                        Ask a Question
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </AnimatePresence>
 
           {/* Business consulting detail strip */}
           {activeTab === "business" && (
