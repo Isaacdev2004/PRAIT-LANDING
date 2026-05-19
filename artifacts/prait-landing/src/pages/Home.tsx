@@ -1,28 +1,132 @@
-import React from "react";
+import { useState, useRef, type ReactNode, type FormEvent } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { GraduationCap, Briefcase, TrendingUp, CheckCircle, Globe, BookOpen, HeartHandshake, MapPin } from "lucide-react";
-import { motion } from "framer-motion";
+import {
+  GraduationCap, Briefcase, TrendingUp, CheckCircle, Globe, BookOpen,
+  MapPin, ArrowRight, Star, Building2, Users, Award, Zap, Menu, X
+} from "lucide-react";
+import { motion, useInView } from "framer-motion";
 import { FaLinkedinIn, FaFacebookF, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa6";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 32 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
+};
+const stagger = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { staggerChildren: 0.12 } },
+};
+const fadeIn = {
+  hidden: { opacity: 0 },
+  show: { opacity: 1, transition: { duration: 0.7 } },
+};
+
+function AnimateOnScroll({ children, className = "", delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.div
+      ref={ref}
+      initial="hidden"
+      animate={inView ? "show" : "hidden"}
+      variants={{ hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut", delay } } }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+const TABS = [
+  {
+    id: "domestic",
+    label: "Domestic Career Colleges",
+    icon: GraduationCap,
+    headline: "Start a High-Paying Career in Canada",
+    subhead: "Funded diploma programs for residents & new immigrants",
+    bullets: [
+      "OSAP & government-funded programs available",
+      "Fast-tracked, flexible schedules designed for working adults",
+      "Fully recognized diplomas from accredited institutions",
+      "Career placement support included",
+      "Programs in healthcare, IT, business, trades & more",
+    ],
+    cta: "Explore Career Programs",
+    color: "primary",
+  },
+  {
+    id: "international",
+    label: "International Admissions",
+    icon: Globe,
+    headline: "Study at Top Canadian Colleges",
+    subhead: "End-to-end admissions & visa support for African students",
+    bullets: [
+      "Partner institution: Conestoga College",
+      "Full application management & document preparation",
+      "Student visa guidance and processing support",
+      "Pre-arrival and settlement assistance",
+      "Scholarship and funding identification",
+    ],
+    cta: "View Admissions Process",
+    color: "secondary",
+  },
+  {
+    id: "training",
+    label: "Corporate Training & Upskilling",
+    icon: Briefcase,
+    headline: "Build the Skills the Modern Market Demands",
+    subhead: "Bootcamps, corporate training & international excursions",
+    bullets: [
+      "AI & Cybersecurity intensive bootcamps",
+      "Resume & LinkedIn optimization",
+      "Digital skills & workplace technology training",
+      "Corporate team upskilling packages",
+      "International training excursions for professionals",
+    ],
+    cta: "View Training Programs",
+    color: "secondary",
+  },
+  {
+    id: "business",
+    label: "Business Consulting",
+    icon: TrendingUp,
+    headline: "Scale Your Business. Expand Your Reach.",
+    subhead: "Comprehensive consulting for entrepreneurs & enterprises",
+    bullets: [
+      "Canadian business registration & operations",
+      "Government grants & loans applications",
+      "Branding, web development & digital marketing",
+      "Business accounting & taxation",
+      "Bilateral trade opportunities & global expansion",
+    ],
+    cta: "Book a Strategy Session",
+    color: "accent",
+  },
+];
 
 export default function Home() {
   const { toast } = useToast();
-  const [formData, setFormData] = React.useState({ name: "", email: "", phone: "", interest: "", message: "" });
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [formData, setFormData] = useState({
+    name: "", email: "", phone: "", residency: "", interest: "", employment: [] as string[], message: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState("domestic");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleFormSubmit = async (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
       const res = await fetch(`${import.meta.env.BASE_URL}api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, employment: formData.employment.join(", ") }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -32,7 +136,7 @@ export default function Home() {
         title: "Request Received!",
         description: "Thank you — we will be in touch shortly to schedule your free consultation.",
       });
-      setFormData({ name: "", email: "", phone: "", interest: "", message: "" });
+      setFormData({ name: "", email: "", phone: "", residency: "", interest: "", employment: [], message: "" });
     } catch (err) {
       toast({
         title: "Submission Failed",
@@ -44,401 +148,550 @@ export default function Home() {
     }
   };
 
+  const toggleEmployment = (val: string) => {
+    setFormData(f => ({
+      ...f,
+      employment: f.employment.includes(val) ? f.employment.filter(v => v !== val) : [...f.employment, val]
+    }));
+  };
+
   const scrollTo = (id: string) => {
     const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+    setMobileMenuOpen(false);
   };
 
-  const staggerContainer = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
-  };
-
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.6 } }
-  };
+  const activeTabData = TABS.find(t => t.id === activeTab)!;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Sticky Navbar */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="min-h-screen bg-background overflow-x-hidden">
+
+      {/* ── NAVBAR ── */}
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => scrollTo("hero")} data-testid="nav-logo">
-            <img src="/prait-logo.jpeg" alt="PRAIT Consulting Logo" className="h-12 w-auto object-contain rounded-md" />
+          <div className="flex items-center cursor-pointer" onClick={() => scrollTo("hero")} data-testid="nav-logo">
+            <img src="/prait-logo.jpeg" alt="PRAIT Consulting" className="h-12 w-auto object-contain rounded-md" />
           </div>
           <nav className="hidden md:flex gap-8 items-center">
-            <button onClick={() => scrollTo("solutions")} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors" data-testid="nav-link-solutions">Solutions</button>
-            <button onClick={() => scrollTo("process")} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors" data-testid="nav-link-process">How It Works</button>
-            <button onClick={() => scrollTo("programs")} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors" data-testid="nav-link-programs">Programs</button>
-            <button onClick={() => scrollTo("testimonials")} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors" data-testid="nav-link-testimonials">Testimonials</button>
+            {[["solutions","Solutions"],["process","How It Works"],["programs","Programs"],["testimonials","Testimonials"],["contact","Contact"]].map(([id, label]) => (
+              <button key={id} onClick={() => scrollTo(id)} className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors" data-testid={`nav-link-${id}`}>{label}</button>
+            ))}
           </nav>
-          <Button onClick={() => scrollTo("contact")} className="bg-accent hover:bg-accent/90 text-white rounded-full px-6" data-testid="nav-cta">
-            Book Consultation
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button onClick={() => scrollTo("contact")} className="hidden md:flex bg-accent hover:bg-accent/90 text-white rounded-full px-6 shadow-md shadow-accent/20" data-testid="nav-cta">
+              Book Consultation
+            </Button>
+            <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(o => !o)} data-testid="nav-mobile-toggle">
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            </button>
+          </div>
         </div>
+        {mobileMenuOpen && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="md:hidden border-t bg-background px-4 py-4 flex flex-col gap-3">
+            {[["solutions","Solutions"],["process","How It Works"],["programs","Programs"],["testimonials","Testimonials"],["contact","Contact"]].map(([id, label]) => (
+              <button key={id} onClick={() => scrollTo(id)} className="text-left text-base font-medium text-foreground py-2 border-b border-border/50">{label}</button>
+            ))}
+            <Button onClick={() => scrollTo("contact")} className="mt-2 bg-accent text-white rounded-full w-full">Book Consultation</Button>
+          </motion.div>
+        )}
       </header>
 
-      {/* Hero Section */}
-      <section id="hero" className="relative pt-24 pb-32 lg:pt-36 lg:pb-40 overflow-hidden">
-        <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-background to-background"></div>
-        <div className="container mx-auto px-4 text-center">
-          <motion.div initial="hidden" animate="show" variants={staggerContainer} className="max-w-4xl mx-auto">
-            <motion.h1 variants={fadeInUp} className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-6 leading-tight">
-              Unlock Your Future.<br/> <span className="text-primary">Cross Borders.</span> <span className="text-secondary">Climb Ladders.</span>
+      {/* ── HERO ── */}
+      <section id="hero" className="relative pt-24 pb-28 lg:pt-36 lg:pb-40 overflow-hidden">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-primary/5 blur-3xl -translate-y-1/2 translate-x-1/4" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-secondary/5 blur-3xl translate-y-1/2 -translate-x-1/4" />
+        </div>
+        <div className="container mx-auto px-4">
+          <motion.div initial="hidden" animate="show" variants={stagger} className="max-w-5xl mx-auto text-center">
+            <motion.div variants={fadeUp}>
+              <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-6">
+                Canada • Africa • Global
+              </span>
+            </motion.div>
+            <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-4 leading-[1.1]">
+              Bridging Ambition<br />
+              <span className="text-primary">with Opportunity.</span>
             </motion.h1>
-            <motion.p variants={fadeInUp} className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-              Bridging Africa and Canada with premier education, career development, and business consulting for a transformative journey.
+            <motion.p variants={fadeUp} className="text-lg md:text-xl text-muted-foreground mb-3 font-medium">
+              Fast-Track Your Career in Canada and Beyond.
             </motion.p>
-            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-              <Button size="lg" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-white rounded-full text-lg h-14 px-8 shadow-lg shadow-accent/20" onClick={() => scrollTo("contact")} data-testid="hero-primary-cta">
+            <motion.p variants={fadeUp} className="text-base md:text-lg text-muted-foreground/80 mb-10 max-w-3xl mx-auto leading-relaxed">
+              Guiding domestic residents to funded career programs, international students to Canadian institutions, and entrepreneurs to global growth. We map the exact route to your success.
+            </motion.p>
+
+            {/* 4 Pathway Cards */}
+            <motion.div variants={stagger} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 text-left">
+              {[
+                { label: "Start a Career in Canada", sub: "OSAP-funded diploma programs for domestic residents & new immigrants.", icon: GraduationCap, color: "primary", tab: "domestic" },
+                { label: "Study Internationally", sub: "Admissions support for international students applying to top Canadian colleges.", icon: Globe, color: "secondary", tab: "international" },
+                { label: "Corporate Training & Upskilling", sub: "International training and bootcamps for corporate teams, professionals & graduates.", icon: Briefcase, color: "secondary", tab: "training" },
+                { label: "Business Consulting", sub: "Business registration, grants, web development & global trade strategies.", icon: TrendingUp, color: "accent", tab: "business" },
+              ].map((card, i) => (
+                <motion.div key={i} variants={fadeUp}>
+                  <Card
+                    className="group h-full border border-border/60 hover:border-primary/30 hover:shadow-lg transition-all duration-300 rounded-2xl cursor-pointer bg-card"
+                    onClick={() => { scrollTo("programs"); setActiveTab(card.tab); }}
+                    data-testid={`hero-card-${card.tab}`}
+                  >
+                    <CardContent className="p-5 flex flex-col gap-3 h-full">
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center bg-${card.color}/10 text-${card.color} group-hover:scale-110 transition-transform`}>
+                        <card.icon className="h-5 w-5" />
+                      </div>
+                      <h3 className="font-bold text-sm text-foreground leading-snug">{card.label}</h3>
+                      <p className="text-xs text-muted-foreground leading-relaxed flex-1">{card.sub}</p>
+                      <span className={`text-xs font-semibold text-${card.color} flex items-center gap-1 group-hover:gap-2 transition-all`}>
+                        Explore <ArrowRight className="h-3 w-3" />
+                      </span>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Button size="lg" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-white rounded-full text-base h-13 px-8 shadow-lg shadow-accent/25" onClick={() => scrollTo("contact")} data-testid="hero-primary-cta">
                 Book Free Consultation
               </Button>
-            </motion.div>
-            <motion.div variants={fadeInUp} className="flex flex-wrap justify-center gap-3">
-              <Button variant="outline" className="rounded-full border-primary/20 hover:bg-primary/5 text-primary" onClick={() => scrollTo("programs")} data-testid="hero-study">Study in Canada</Button>
-              <Button variant="outline" className="rounded-full border-secondary/20 hover:bg-secondary/5 text-secondary" onClick={() => scrollTo("programs")} data-testid="hero-job">Get Job-Ready</Button>
-              <Button variant="outline" className="rounded-full border-accent/20 hover:bg-accent/5 text-accent" onClick={() => scrollTo("programs")} data-testid="hero-business">Grow Your Business</Button>
+              <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full text-base h-13 px-8" onClick={() => scrollTo("programs")} data-testid="hero-explore">
+                Explore Pathways
+              </Button>
             </motion.div>
           </motion.div>
         </div>
       </section>
 
-      {/* Social Proof Strip */}
-      <section className="border-y bg-muted/30 py-10">
+      {/* ── TRUST STRIP ── */}
+      <section className="border-y bg-muted/20 py-8">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center items-center divide-x divide-border/50">
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-3xl font-bold text-primary">Conestoga</span>
-              <span className="text-sm text-muted-foreground font-medium uppercase tracking-wider">College Partner</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-3xl font-bold text-secondary">500+</span>
-              <span className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Students Placed</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-3xl font-bold text-accent">3</span>
-              <span className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Countries Served</span>
-            </div>
-            <div className="flex flex-col items-center gap-2">
-              <span className="text-3xl font-bold text-primary">10+</span>
-              <span className="text-sm text-muted-foreground font-medium uppercase tracking-wider">Programs</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Problem Awareness */}
-      <section className="py-24 bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-8">You are capable of more, but the path is unclear.</h2>
-          <p className="text-xl md:text-2xl text-primary-foreground/80 leading-relaxed font-light">
-            Career confusion. Credential gaps. Immigration uncertainty. Skills that don't match the modern market. 
-            The journey to a better life is complex, and navigating it alone is overwhelming. 
-            <strong className="text-white block mt-4">We've walked this path. We know the way.</strong>
-          </p>
-        </div>
-      </section>
-
-      {/* Solution Overview */}
-      <section id="solutions" className="py-24">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Three Pillars of Transformation</h2>
-            <p className="text-lg text-muted-foreground">Comprehensive solutions tailored to your unique journey and goals.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-b from-card to-primary/5 rounded-2xl overflow-hidden">
-              <CardContent className="p-8 flex flex-col items-center text-center">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-6 text-primary">
-                  <Globe className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Canada Pathway</h3>
-                <p className="text-muted-foreground mb-6">Expert guidance for domestic and international student recruitment, specializing in prestigious institutions like Conestoga College.</p>
-                <Button variant="ghost" className="mt-auto rounded-full w-full border-primary/20 hover:bg-primary/5 text-primary group" onClick={() => scrollTo("programs")} data-testid="solution-canada-btn">
-                  Explore Pathways <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
-                </Button>
-              </CardContent>
-            </Card>
-            <Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-b from-card to-secondary/5 rounded-2xl overflow-hidden">
-              <CardContent className="p-8 flex flex-col items-center text-center">
-                <div className="h-16 w-16 rounded-full bg-secondary/10 flex items-center justify-center mb-6 text-secondary">
-                  <GraduationCap className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Career Training</h3>
-                <p className="text-muted-foreground mb-6">Future-proof your skills with intensive bootcamps in AI, Cybersecurity, and Digital Skills designed for the modern workforce.</p>
-                <Button variant="ghost" className="mt-auto rounded-full w-full border-secondary/20 hover:bg-secondary/5 text-secondary group" onClick={() => scrollTo("programs")} data-testid="solution-training-btn">
-                  View Bootcamps <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
-                </Button>
-              </CardContent>
-            </Card>
-            <Card className="border-none shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-b from-card to-accent/5 rounded-2xl overflow-hidden">
-              <CardContent className="p-8 flex flex-col items-center text-center">
-                <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center mb-6 text-accent">
-                  <TrendingUp className="h-8 w-8" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Business Growth</h3>
-                <p className="text-muted-foreground mb-6">Strategic consulting and practical solutions to help entrepreneurs scale their operations and enter new global markets.</p>
-                <Button variant="ghost" className="mt-auto rounded-full w-full border-accent/20 hover:bg-accent/5 text-accent group" onClick={() => scrollTo("programs")} data-testid="solution-business-btn">
-                  Learn More <span className="ml-2 group-hover:translate-x-1 transition-transform">→</span>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section id="process" className="py-24 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-20">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">A Proven Framework for Success</h2>
-            <p className="text-lg text-muted-foreground">We turn complex processes into clear, actionable steps.</p>
-          </div>
-          <div className="grid md:grid-cols-4 gap-8 relative">
-            <div className="hidden md:block absolute top-12 left-[12.5%] right-[12.5%] h-0.5 bg-border -z-10"></div>
-            
+          <div className="flex flex-wrap justify-center gap-x-10 gap-y-4 text-center">
             {[
-              { step: "01", title: "Discover", desc: "We analyze your background, goals, and map the optimal route.", icon: MapPin },
-              { step: "02", title: "Plan", desc: "Develop a concrete strategy for admission, training, or business.", icon: BookOpen },
-              { step: "03", title: "Apply & Train", desc: "Execute applications and enroll in vital skill-building programs.", icon: Briefcase },
-              { step: "04", title: "Succeed", desc: "Land in Canada, start your new career, and thrive.", icon: CheckCircle },
-            ].map((s, i) => (
-              <div key={i} className="flex flex-col items-center text-center relative">
-                <div className="h-24 w-24 rounded-full bg-background border-4 border-background shadow-md flex items-center justify-center mb-6 z-10">
-                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <s.icon className="h-10 w-10" />
-                  </div>
-                </div>
-                <h4 className="text-sm font-bold text-accent mb-2 tracking-widest uppercase">STEP {s.step}</h4>
-                <h3 className="text-xl font-bold mb-3">{s.title}</h3>
-                <p className="text-muted-foreground">{s.desc}</p>
+              { icon: Award, label: "Fully Recognized Diplomas" },
+              { icon: Zap, label: "OSAP & Government Funding Eligible" },
+              { icon: BookOpen, label: "Fast-Tracked Flexible Schedules" },
+              { icon: Building2, label: "Partner to Top Canadian Colleges" },
+              { icon: Users, label: "Tailored Solutions for Your Goals" },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <item.icon className="h-4 w-4 text-primary flex-shrink-0" />
+                {item.label}
               </div>
             ))}
           </div>
-          <div className="mt-16 text-center">
-            <Button size="lg" className="bg-accent hover:bg-accent/90 text-white rounded-full px-8" onClick={() => scrollTo("contact")} data-testid="process-cta">
-              Start Your Journey
-            </Button>
-          </div>
         </div>
       </section>
 
-      {/* Programs Overview */}
-      <section id="programs" className="py-24">
+      {/* ── SOCIAL PROOF NUMBERS ── */}
+      <section className="py-16 bg-primary text-primary-foreground">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-            <div className="max-w-2xl">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Targeted Programs</h2>
-              <p className="text-lg text-muted-foreground">Designed specifically for career switchers, immigrants, and ambitious professionals.</p>
+          <AnimateOnScroll>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+              {[
+                { num: "500+", label: "Students Placed" },
+                { num: "10+", label: "Programs Available" },
+                { num: "3", label: "Countries Served" },
+                { num: "100%", label: "Dedicated Support" },
+              ].map((s, i) => (
+                <div key={i} className="flex flex-col items-center gap-1">
+                  <span className="text-4xl font-bold text-accent">{s.num}</span>
+                  <span className="text-sm text-primary-foreground/70 uppercase tracking-wider font-medium">{s.label}</span>
+                </div>
+              ))}
             </div>
-            <Button variant="outline" className="rounded-full shrink-0" onClick={() => scrollTo("contact")} data-testid="programs-inquire-btn">Inquire About Programs</Button>
-          </div>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { title: "Career College in Canada", desc: "Domestic placements for Canadian residents seeking practical career advancement.", color: "primary" },
-              { title: "International Admissions", desc: "End-to-end support for international students applying to Conestoga and other top colleges.", color: "primary" },
-              { title: "AI & Cybersecurity", desc: "Intensive tech bootcamps to transition into high-demand technology roles.", color: "secondary" },
-              { title: "Digital Skills Training", desc: "Master modern digital tools, software, and platforms essential for corporate success.", color: "secondary" },
-              { title: "Resume & LinkedIn", desc: "Optimization services to make you stand out to Canadian and global recruiters.", color: "accent" },
-              { title: "Business & Marketing", desc: "Consulting packages for entrepreneurs to scale and market their services effectively.", color: "accent" },
-            ].map((prog, i) => (
-              <Card key={i} className="group hover:border-primary/50 transition-colors rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md">
-                <CardContent className="p-6">
-                  <div className={`h-2 w-12 rounded-full mb-6 bg-${prog.color}`}></div>
-                  <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">{prog.title}</h3>
-                  <p className="text-muted-foreground">{prog.desc}</p>
-                </CardContent>
-              </Card>
+          </AnimateOnScroll>
+        </div>
+      </section>
+
+      {/* ── PROBLEM / HOOK ── */}
+      <section className="py-24 bg-background">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <AnimateOnScroll className="text-center">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-6">Why PRAIT?</span>
+            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-foreground leading-tight">You are capable of more.<br />The path just isn't clear yet.</h2>
+            <p className="text-lg text-muted-foreground leading-relaxed mb-10">
+              Career confusion. Credential gaps. Immigration uncertainty. Skills that don't match the modern market.
+              The journey to a better life is complex — and navigating it alone is overwhelming.
+            </p>
+          </AnimateOnScroll>
+          <AnimateOnScroll delay={0.15}>
+            <div className="grid md:grid-cols-3 gap-6">
+              {[
+                { icon: MapPin, title: "No Clear Direction", desc: "Thousands of options, no clear path. We've mapped the routes so you don't have to guess." },
+                { icon: Award, title: "Credentials Not Recognized", desc: "Your qualifications may not translate. We know exactly which programs bridge that gap." },
+                { icon: Globe, title: "Complex Immigration Process", desc: "Visas, permits, applications — it's a full-time job. Let us handle the complexity." },
+              ].map((p, i) => (
+                <div key={i} className="flex flex-col items-center text-center p-6 rounded-2xl bg-muted/30 border border-border/50">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4">
+                    <p.icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-bold mb-2">{p.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
+                </div>
+              ))}
+            </div>
+          </AnimateOnScroll>
+          <AnimateOnScroll delay={0.2} className="text-center mt-10">
+            <p className="text-xl font-bold text-primary">We've walked this path. We know the way.</p>
+          </AnimateOnScroll>
+        </div>
+      </section>
+
+      {/* ── SOLUTION PILLARS ── */}
+      <section id="solutions" className="py-24 bg-muted/20">
+        <div className="container mx-auto px-4">
+          <AnimateOnScroll className="text-center max-w-3xl mx-auto mb-14">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-4">Our Pillars</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Four Paths. One Trusted Partner.</h2>
+            <p className="text-lg text-muted-foreground">Comprehensive solutions tailored to your unique journey and goals.</p>
+          </AnimateOnScroll>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {TABS.map((tab, i) => (
+              <AnimateOnScroll key={tab.id} delay={i * 0.1}>
+                <Card className={`group border-none shadow-md hover:shadow-xl transition-all duration-300 rounded-2xl overflow-hidden h-full bg-gradient-to-b from-card to-${tab.color}/5`}>
+                  <CardContent className="p-7 flex flex-col h-full">
+                    <div className={`h-12 w-12 rounded-xl bg-${tab.color}/10 flex items-center justify-center mb-5 text-${tab.color} group-hover:scale-110 transition-transform`}>
+                      <tab.icon className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-lg font-bold mb-2">{tab.headline}</h3>
+                    <p className="text-sm text-muted-foreground mb-5 flex-1 leading-relaxed">{tab.subhead}</p>
+                    <Button variant="ghost" size="sm" className={`rounded-full w-full border border-${tab.color}/20 hover:bg-${tab.color}/5 text-${tab.color} group/btn`}
+                      onClick={() => { setActiveTab(tab.id); scrollTo("programs"); }} data-testid={`solution-${tab.id}-btn`}>
+                      {tab.cta} <ArrowRight className="h-3 w-3 ml-1 group-hover/btn:translate-x-1 transition-transform" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </AnimateOnScroll>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section id="testimonials" className="py-24 bg-primary text-primary-foreground">
+      {/* ── HOW IT WORKS ── */}
+      <section id="process" className="py-24 bg-background">
         <div className="container mx-auto px-4">
-          <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Lives Changed. Futures Built.</h2>
-            <p className="text-lg text-primary-foreground/80">Don't just take our word for it. Hear from professionals who crossed borders and climbed ladders.</p>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <AnimateOnScroll className="text-center max-w-3xl mx-auto mb-16">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-4">The Process</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">A Proven Framework for Success</h2>
+            <p className="text-lg text-muted-foreground">Complex processes broken into clear, actionable steps.</p>
+          </AnimateOnScroll>
+          <div className="grid md:grid-cols-4 gap-8 relative">
+            <div className="hidden md:block absolute top-10 left-[14%] right-[14%] h-px bg-gradient-to-r from-primary/20 via-secondary/20 to-accent/20" />
             {[
-              { quote: "PRAIT didn't just help me apply; they completely re-engineered my career trajectory. The transition from nursing in Africa to healthcare IT in Toronto was seamless because of their guidance.", name: "Sarah M.", role: "Healthcare IT Consultant, Toronto" },
-              { quote: "The AI bootcamp gave me the exact technical skills I was missing. Within 3 months of completing the program, I landed a junior data role. They are truly invested in your success.", name: "David O.", role: "Data Analyst, Calgary" },
-              { quote: "Navigating the international student process for Conestoga felt impossible until I met the PRAIT team. They held my hand through every single step of the process.", name: "Grace K.", role: "International Student, Ontario" }
-            ].map((t, i) => (
-              <Card key={i} className="bg-primary-foreground/10 border-none text-primary-foreground rounded-2xl p-8 flex flex-col justify-between">
-                <div className="mb-6">
-                  <div className="flex text-accent mb-4">
-                    {[1,2,3,4,5].map(s => <span key={s}>★</span>)}
-                  </div>
-                  <p className="text-lg font-medium leading-relaxed">"{t.quote}"</p>
-                </div>
-                <div className="flex items-center gap-4 border-t border-primary-foreground/20 pt-6">
-                  <div className="h-12 w-12 rounded-full bg-primary-foreground/20 flex items-center justify-center font-bold text-xl">
-                    {t.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h4 className="font-bold">{t.name}</h4>
-                    <p className="text-sm text-primary-foreground/70">{t.role}</p>
+              { step: "01", title: "Discover", desc: "We analyze your background, goals, and map the optimal route for you specifically.", icon: MapPin, color: "primary" },
+              { step: "02", title: "Plan", desc: "We develop a concrete, personalized strategy for admission, training, or business growth.", icon: BookOpen, color: "secondary" },
+              { step: "03", title: "Apply & Train", desc: "We execute applications and enroll you in vital skill-building programs.", icon: Briefcase, color: "secondary" },
+              { step: "04", title: "Succeed", desc: "Land in Canada, start your new career, grow your business — and thrive.", icon: CheckCircle, color: "accent" },
+            ].map((s, i) => (
+              <AnimateOnScroll key={i} delay={i * 0.12} className="flex flex-col items-center text-center">
+                <div className={`h-20 w-20 rounded-full bg-background border-2 border-${s.color}/20 shadow-lg flex items-center justify-center mb-5 z-10 relative`}>
+                  <div className={`h-16 w-16 rounded-full bg-${s.color}/10 flex items-center justify-center text-${s.color}`}>
+                    <s.icon className="h-8 w-8" />
                   </div>
                 </div>
-              </Card>
+                <span className={`text-xs font-bold text-${s.color} mb-1 tracking-widest uppercase`}>Step {s.step}</span>
+                <h3 className="text-lg font-bold mb-2">{s.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+              </AnimateOnScroll>
             ))}
           </div>
+          <AnimateOnScroll className="mt-14 text-center">
+            <Button size="lg" className="bg-accent hover:bg-accent/90 text-white rounded-full px-8 shadow-md shadow-accent/20" onClick={() => scrollTo("contact")} data-testid="process-cta">
+              Start Your Journey <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          </AnimateOnScroll>
         </div>
       </section>
 
-      {/* Final CTA / Contact Form */}
-      <section id="contact" className="py-24 bg-muted/30">
+      {/* ── PROGRAMS TABBED ── */}
+      <section id="programs" className="py-24 bg-muted/20">
         <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto bg-background rounded-3xl shadow-xl overflow-hidden border">
-            <div className="grid md:grid-cols-5 h-full">
-              <div className="md:col-span-2 bg-gradient-to-br from-primary to-primary/90 text-primary-foreground p-10 flex flex-col justify-between">
-                <div>
-                  <h2 className="text-3xl font-bold mb-4">Ready to start?</h2>
-                  <p className="text-primary-foreground/80 mb-8">Take the first step towards your new future. Book a free, no-obligation consultation with our experts.</p>
-                  <ul className="space-y-4 mb-12">
-                    <li className="flex items-center gap-3">
-                      <CheckCircle className="text-accent h-5 w-5" />
-                      <span>Personalized pathway assessment</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <CheckCircle className="text-accent h-5 w-5" />
-                      <span>Clear actionable next steps</span>
-                    </li>
-                    <li className="flex items-center gap-3">
-                      <CheckCircle className="text-accent h-5 w-5" />
-                      <span>Answers to all your questions</span>
-                    </li>
+          <AnimateOnScroll className="text-center max-w-3xl mx-auto mb-6">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-4">Programs</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">Tailored Solutions for Your Goals</h2>
+            <p className="text-lg text-muted-foreground">Select your path below to discover how PRAIT Consulting can facilitate your transition.</p>
+          </AnimateOnScroll>
+
+          {/* Tab Buttons */}
+          <div className="flex flex-wrap justify-center gap-2 mb-10">
+            {TABS.map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                data-testid={`tab-${tab.id}`}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
+                  activeTab === tab.id
+                    ? "bg-primary text-primary-foreground border-primary shadow-md"
+                    : "bg-background text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
+                }`}
+              >
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Content */}
+          <motion.div key={activeTab} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+            <div className="max-w-5xl mx-auto bg-background rounded-3xl shadow-xl border overflow-hidden">
+              <div className="grid md:grid-cols-2">
+                <div className={`bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-10`}>
+                  <div className={`h-14 w-14 rounded-2xl bg-white/10 flex items-center justify-center mb-6`}>
+                    <activeTabData.icon className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2">{activeTabData.headline}</h3>
+                  <p className="text-primary-foreground/80 mb-8">{activeTabData.subhead}</p>
+                  <ul className="space-y-3">
+                    {activeTabData.bullets.map((b, i) => (
+                      <li key={i} className="flex items-start gap-3 text-sm">
+                        <CheckCircle className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
+                        <span>{b}</span>
+                      </li>
+                    ))}
                   </ul>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 bg-white rounded-md p-2">
-                    <img src="/prait-logo.jpeg" alt="Logo" className="w-full h-full object-contain" />
-                  </div>
-                  <div>
-                    <p className="font-bold">PRAIT Consulting Inc.</p>
-                    <p className="text-sm text-primary-foreground/70">Canada</p>
+                <div className="p-10 flex flex-col justify-center">
+                  <h4 className="text-xl font-bold mb-4 text-foreground">Ready to get started?</h4>
+                  <p className="text-muted-foreground mb-6 leading-relaxed text-sm">
+                    Book a free, no-obligation consultation with one of our pathway specialists. We'll assess your situation and map the clearest route to your goals.
+                  </p>
+                  <div className="space-y-3">
+                    <Button className="w-full bg-accent hover:bg-accent/90 text-white rounded-full shadow-md" onClick={() => scrollTo("contact")} data-testid={`tab-cta-${activeTab}`}>
+                      {activeTabData.cta} <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                    <Button variant="outline" className="w-full rounded-full" onClick={() => scrollTo("contact")}>
+                      Ask a Question
+                    </Button>
                   </div>
                 </div>
               </div>
-              <div className="md:col-span-3 p-10">
-                <form onSubmit={handleFormSubmit} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input id="name" required placeholder="John Doe" className="rounded-lg bg-muted/50 border-transparent focus-visible:border-primary" data-testid="form-input-name" value={formData.name} onChange={e => setFormData(f => ({ ...f, name: e.target.value }))} />
+            </div>
+          </motion.div>
+
+          {/* Business consulting detail strip */}
+          {activeTab === "business" && (
+            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="max-w-5xl mx-auto mt-8">
+              <div className="bg-background rounded-2xl border p-8">
+                <h4 className="font-bold text-lg mb-5 text-foreground">For Entrepreneurs & Enterprises — Our Consulting Services:</h4>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {[
+                    "Canadian Business Registration & Operations",
+                    "Canadian Business Grants & Loans",
+                    "Business Accounting & Taxation",
+                    "Branding, Web Development & Digital Marketing",
+                    "Bilateral Trade Opportunities & Global Reach",
+                    "AI Tools Integration & Business Optimization",
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3 text-sm text-foreground">
+                      <div className="h-1.5 w-1.5 rounded-full bg-accent flex-shrink-0" />
+                      {item}
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input id="email" type="email" required placeholder="john@example.com" className="rounded-lg bg-muted/50 border-transparent focus-visible:border-primary" data-testid="form-input-email" value={formData.email} onChange={e => setFormData(f => ({ ...f, email: e.target.value }))} />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ── */}
+      <section id="testimonials" className="py-24 bg-primary text-primary-foreground">
+        <div className="container mx-auto px-4">
+          <AnimateOnScroll className="text-center max-w-3xl mx-auto mb-14">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/20 rounded-full px-4 py-1.5 mb-4">Success Stories</span>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Lives Changed. Futures Built.</h2>
+            <p className="text-primary-foreground/70 text-lg">Real people. Real transformations. Hear from those who crossed borders and climbed ladders.</p>
+          </AnimateOnScroll>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { quote: "PRAIT didn't just help me apply — they completely re-engineered my career trajectory. The transition from nursing in Africa to healthcare IT in Toronto was seamless because of their guidance.", name: "Sarah M.", role: "Healthcare IT Consultant, Toronto" },
+              { quote: "The AI bootcamp gave me the exact technical skills I was missing. Within 3 months of completing the program, I landed a junior data role. They are truly invested in your success.", name: "David O.", role: "Data Analyst, Calgary" },
+              { quote: "Navigating the international student process for Conestoga felt impossible until I met the PRAIT team. They held my hand through every single step of the process.", name: "Grace K.", role: "International Student, Ontario" },
+            ].map((t, i) => (
+              <AnimateOnScroll key={i} delay={i * 0.1}>
+                <Card className="bg-white/10 border-none text-primary-foreground rounded-2xl h-full">
+                  <CardContent className="p-8 flex flex-col justify-between h-full">
+                    <div className="mb-6">
+                      <div className="flex text-accent mb-4 gap-0.5">
+                        {[1,2,3,4,5].map(s => <Star key={s} className="h-4 w-4 fill-accent" />)}
+                      </div>
+                      <p className="text-base leading-relaxed font-medium">"{t.quote}"</p>
+                    </div>
+                    <div className="flex items-center gap-3 border-t border-white/20 pt-5 mt-auto">
+                      <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center font-bold">
+                        {t.name.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-bold text-sm">{t.name}</p>
+                        <p className="text-xs text-primary-foreground/60">{t.role}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </AnimateOnScroll>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── CONTACT FORM ── */}
+      <section id="contact" className="py-24 bg-muted/20">
+        <div className="container mx-auto px-4">
+          <AnimateOnScroll className="text-center max-w-3xl mx-auto mb-10">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-4">Get Started</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">Ready to Map Your Route to Success?</h2>
+            <p className="text-lg text-muted-foreground">Book a free, zero-pressure consultation. Select your area of interest so we can connect you with the right expert.</p>
+          </AnimateOnScroll>
+          <AnimateOnScroll delay={0.1}>
+            <div className="max-w-5xl mx-auto bg-background rounded-3xl shadow-xl overflow-hidden border">
+              <div className="grid md:grid-cols-5">
+                <div className="md:col-span-2 bg-gradient-to-br from-primary to-primary/85 text-primary-foreground p-10 flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-2xl font-bold mb-3">Let's Talk</h3>
+                    <p className="text-primary-foreground/80 mb-8 text-sm leading-relaxed">Take the first step. Our specialists will assess your situation and provide a clear, honest roadmap.</p>
+                    <ul className="space-y-4 mb-10">
+                      {["Personalized pathway assessment", "Clear, actionable next steps", "Zero pressure — just honest guidance"].map((item, i) => (
+                        <li key={i} className="flex items-center gap-3 text-sm">
+                          <CheckCircle className="text-accent h-4 w-4 flex-shrink-0" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 bg-white rounded-lg p-1.5 flex-shrink-0">
+                      <img src="/prait-logo.jpeg" alt="Logo" className="w-full h-full object-contain" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">PRAIT Consulting Inc.</p>
+                      <p className="text-xs text-primary-foreground/60">info@praitconsulting.ca</p>
                     </div>
                   </div>
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" className="rounded-lg bg-muted/50 border-transparent focus-visible:border-primary" data-testid="form-input-phone" value={formData.phone} onChange={e => setFormData(f => ({ ...f, phone: e.target.value }))} />
+                </div>
+                <div className="md:col-span-3 p-10">
+                  <form onSubmit={handleFormSubmit} className="space-y-5">
+                    <div className="grid md:grid-cols-2 gap-5">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="name">Full Name <span className="text-accent">*</span></Label>
+                        <Input id="name" required placeholder="John Doe" className="rounded-lg bg-muted/40 border-transparent focus-visible:border-primary" data-testid="form-input-name" value={formData.name} onChange={e => setFormData(f => ({ ...f, name: e.target.value }))} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="email">Email Address <span className="text-accent">*</span></Label>
+                        <Input id="email" type="email" required placeholder="john@example.com" className="rounded-lg bg-muted/40 border-transparent focus-visible:border-primary" data-testid="form-input-email" value={formData.email} onChange={e => setFormData(f => ({ ...f, email: e.target.value }))} />
+                      </div>
                     </div>
+                    <div className="grid md:grid-cols-2 gap-5">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" className="rounded-lg bg-muted/40 border-transparent focus-visible:border-primary" data-testid="form-input-phone" value={formData.phone} onChange={e => setFormData(f => ({ ...f, phone: e.target.value }))} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="residency">Residency Status <span className="text-accent">*</span></Label>
+                        <Select required value={formData.residency} onValueChange={val => setFormData(f => ({ ...f, residency: val }))}>
+                          <SelectTrigger id="residency" className="rounded-lg bg-muted/40 border-transparent" data-testid="form-select-residency">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="citizen">Canadian Citizen</SelectItem>
+                            <SelectItem value="pr">Permanent Resident</SelectItem>
+                            <SelectItem value="permit">Work / Study Permit</SelectItem>
+                            <SelectItem value="international">International (Outside Canada)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="interest">Area of Interest</Label>
+                      <Label>Employment Status <span className="text-accent">*</span> <span className="text-xs text-muted-foreground font-normal">(select all that apply)</span></Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {["Employed", "Unemployed", "Business Owner", "Corporate Representative"].map(opt => (
+                          <div key={opt} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`emp-${opt}`}
+                              checked={formData.employment.includes(opt)}
+                              onCheckedChange={() => toggleEmployment(opt)}
+                              data-testid={`form-check-${opt.toLowerCase().replace(/\s/g,"-")}`}
+                            />
+                            <label htmlFor={`emp-${opt}`} className="text-sm cursor-pointer">{opt}</label>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="interest">Primary Area of Interest <span className="text-accent">*</span></Label>
                       <Select required value={formData.interest} onValueChange={val => setFormData(f => ({ ...f, interest: val }))}>
-                        <SelectTrigger id="interest" className="rounded-lg bg-muted/50 border-transparent" data-testid="form-select-interest">
-                          <SelectValue placeholder="Select an option" />
+                        <SelectTrigger id="interest" className="rounded-lg bg-muted/40 border-transparent" data-testid="form-select-interest">
+                          <SelectValue placeholder="What do you need help with?" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="study">Study in Canada</SelectItem>
-                          <SelectItem value="train">Career Training / Bootcamp</SelectItem>
+                          <SelectItem value="study">Start a Career in Canada</SelectItem>
+                          <SelectItem value="international">Study Internationally</SelectItem>
+                          <SelectItem value="train">Corporate Training & Upskilling</SelectItem>
                           <SelectItem value="business">Business Consulting</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Additional Information (Optional)</Label>
-                    <textarea 
-                      id="message" 
-                      className="flex w-full rounded-lg border border-transparent bg-muted/50 px-3 py-2 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 min-h-[100px] resize-none" 
-                      placeholder="Tell us a bit about your current situation..."
-                      data-testid="form-input-message"
-                      value={formData.message}
-                      onChange={e => setFormData(f => ({ ...f, message: e.target.value }))}
-                    ></textarea>
-                  </div>
-                  <Button type="submit" size="lg" disabled={isSubmitting} className="w-full bg-accent hover:bg-accent/90 text-white rounded-full text-lg h-12" data-testid="form-submit-btn">
-                    {isSubmitting ? "Sending..." : "Book Free Consultation"}
-                  </Button>
-                  <p className="text-xs text-center text-muted-foreground mt-4">
-                    Your information is secure. We never share your data with third parties.
-                  </p>
-                </form>
+
+                    <Button type="submit" size="lg" disabled={isSubmitting} className="w-full bg-accent hover:bg-accent/90 text-white rounded-full text-base h-12 shadow-md shadow-accent/20" data-testid="form-submit-btn">
+                      {isSubmitting ? "Sending..." : "Book Free Consultation"}
+                    </Button>
+                    <p className="text-xs text-center text-muted-foreground">
+                      Your information is 100% secure and confidential. We never share your details with third parties.
+                    </p>
+                  </form>
+                </div>
               </div>
             </div>
-          </div>
+          </AnimateOnScroll>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-foreground text-background py-12">
+      {/* ── FOOTER ── */}
+      <footer className="bg-foreground text-background py-14">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <div className="grid md:grid-cols-4 gap-10 mb-10">
             <div className="md:col-span-2">
-              <div className="flex items-center gap-2 mb-6 bg-white p-2 rounded-md inline-block w-fit">
-                <img src="/prait-logo.jpeg" alt="PRAIT Consulting Logo" className="h-8 w-auto object-contain" />
+              <div className="bg-white p-2 rounded-lg inline-block mb-5">
+                <img src="/prait-logo.jpeg" alt="PRAIT Consulting" className="h-10 w-auto object-contain" />
               </div>
-              <p className="text-background/70 max-w-md mb-6 leading-relaxed">
+              <p className="text-background/60 max-w-sm mb-6 leading-relaxed text-sm">
                 Bridging Africa and Canada through premium education, transformative career training, and strategic business consulting. Your future, our expertise.
               </p>
               <div className="flex gap-3">
-                <a href="https://www.linkedin.com/company/prait-consulting-inc/" target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-accent transition-colors" data-testid="social-linkedin" aria-label="LinkedIn">
-                  <FaLinkedinIn className="h-5 w-5" />
-                </a>
-                <a href="https://www.facebook.com/share/1NsoT5BUJL/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-accent transition-colors" data-testid="social-facebook" aria-label="Facebook">
-                  <FaFacebookF className="h-5 w-5" />
-                </a>
-                <a href="https://www.instagram.com/prait_consulting?igsh=MWl1c3lyZ293Zm43OQ%3D%3D&utm_source=qr" target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-accent transition-colors" data-testid="social-instagram" aria-label="Instagram">
-                  <FaInstagram className="h-5 w-5" />
-                </a>
-                <a href="https://www.tiktok.com/@prait.consulting?_r=1&_t=ZS-95xYccaoDMS" target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-accent transition-colors" data-testid="social-tiktok" aria-label="TikTok">
-                  <FaTiktok className="h-5 w-5" />
-                </a>
-                <a href="https://youtube.com/@praitconsulting?si=EJQYQxDudKl9PJ3k" target="_blank" rel="noopener noreferrer" className="h-10 w-10 rounded-full bg-background/10 flex items-center justify-center hover:bg-accent transition-colors" data-testid="social-youtube" aria-label="YouTube">
-                  <FaYoutube className="h-5 w-5" />
-                </a>
+                {[
+                  { href: "https://www.linkedin.com/company/prait-consulting-inc/", icon: FaLinkedinIn, label: "LinkedIn" },
+                  { href: "https://www.facebook.com/share/1NsoT5BUJL/?mibextid=wwXIfr", icon: FaFacebookF, label: "Facebook" },
+                  { href: "https://www.instagram.com/prait_consulting?igsh=MWl1c3lyZ293Zm43OQ%3D%3D&utm_source=qr", icon: FaInstagram, label: "Instagram" },
+                  { href: "https://www.tiktok.com/@prait.consulting?_r=1&_t=ZS-95xYccaoDMS", icon: FaTiktok, label: "TikTok" },
+                  { href: "https://youtube.com/@praitconsulting?si=EJQYQxDudKl9PJ3k", icon: FaYoutube, label: "YouTube" },
+                ].map(s => (
+                  <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}
+                    className="h-9 w-9 rounded-full bg-background/10 flex items-center justify-center hover:bg-accent transition-colors" data-testid={`social-${s.label.toLowerCase()}`}>
+                    <s.icon className="h-4 w-4" />
+                  </a>
+                ))}
               </div>
             </div>
             <div>
-              <h4 className="font-bold text-lg mb-6">Quick Links</h4>
-              <ul className="space-y-3">
-                <li><button onClick={() => scrollTo("hero")} className="text-background/70 hover:text-white transition-colors">Home</button></li>
-                <li><button onClick={() => scrollTo("solutions")} className="text-background/70 hover:text-white transition-colors">Solutions</button></li>
-                <li><button onClick={() => scrollTo("programs")} className="text-background/70 hover:text-white transition-colors">Programs</button></li>
-                <li><button onClick={() => scrollTo("testimonials")} className="text-background/70 hover:text-white transition-colors">Testimonials</button></li>
+              <h4 className="font-bold text-base mb-5 text-background">Quick Links</h4>
+              <ul className="space-y-3 text-sm">
+                {[["solutions","Solutions"],["process","How It Works"],["programs","Programs"],["testimonials","Testimonials"],["contact","Contact"]].map(([id, label]) => (
+                  <li key={id}><button onClick={() => scrollTo(id)} className="text-background/60 hover:text-white transition-colors">{label}</button></li>
+                ))}
               </ul>
             </div>
             <div>
-              <h4 className="font-bold text-lg mb-6">Contact</h4>
-              <ul className="space-y-3 text-background/70">
-                <li className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Canada
-                </li>
-                <li className="mt-4">
-                  <Button variant="outline" className="w-full rounded-full border-background/20 text-background hover:bg-background/10 hover:text-white mt-4" onClick={() => scrollTo("contact")}>
-                    Contact Us
-                  </Button>
-                </li>
+              <h4 className="font-bold text-base mb-5 text-background">Contact</h4>
+              <ul className="space-y-3 text-sm text-background/60">
+                <li className="flex items-start gap-2"><MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />Canada</li>
+                <li>info@praitconsulting.ca</li>
               </ul>
+              <Button onClick={() => scrollTo("contact")} variant="outline" className="mt-5 w-full rounded-full border-background/20 text-background hover:bg-background/10 hover:text-white text-sm">
+                Book Consultation
+              </Button>
             </div>
           </div>
-          <div className="border-t border-background/20 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-background/50">
+          <div className="border-t border-background/20 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-background/40">
             <p>&copy; {new Date().getFullYear()} PRAIT Consulting Inc. All rights reserved.</p>
             <div className="flex gap-6">
               <Link href="/privacy-policy" className="hover:text-white transition-colors" data-testid="footer-privacy-link">Privacy Policy</Link>
