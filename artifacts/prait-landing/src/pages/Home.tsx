@@ -229,9 +229,6 @@ export default function Home() {
             ))}
           </nav>
           <div className="flex items-center gap-3">
-            <Button onClick={() => scrollTo("contact")} className="hidden md:flex bg-accent hover:bg-accent/90 text-white rounded-full px-6 shadow-md shadow-accent/20" data-testid="nav-cta">
-              Book Consultation
-            </Button>
             <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(o => !o)} data-testid="nav-mobile-toggle">
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -347,27 +344,6 @@ export default function Home() {
             </div>
           );
         })()}
-      </section>
-
-      {/* ── SOCIAL PROOF NUMBERS ── */}
-      <section className="py-16 bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {[
-              { to: 500, suffix: "+", label: "Students Placed" },
-              { to: 10,  suffix: "+", label: "Programs Available" },
-              { to: 3,   suffix: "",  label: "Countries Served" },
-              { to: 100, suffix: "%", label: "Dedicated Support" },
-            ].map((s, i) => (
-              <AnimateOnScroll key={i} delay={i * 0.1} className="flex flex-col items-center gap-1">
-                <span className="text-4xl md:text-5xl font-bold text-accent">
-                  <AnimatedCounter to={s.to} suffix={s.suffix} duration={2.2} />
-                </span>
-                <span className="text-sm text-primary-foreground/70 uppercase tracking-wider font-medium">{s.label}</span>
-              </AnimateOnScroll>
-            ))}
-          </div>
-        </div>
       </section>
 
       {/* ── PROBLEM / HOOK ── */}
@@ -941,9 +917,6 @@ export default function Home() {
                 <li className="flex items-start gap-2"><MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />Canada</li>
                 <li>info@praitconsulting.ca</li>
               </ul>
-              <Button onClick={() => scrollTo("contact")} variant="outline" className="mt-5 w-full rounded-full border-background/20 text-background hover:bg-background/10 hover:text-white text-sm">
-                Book Consultation
-              </Button>
             </div>
           </div>
           <div className="border-t border-background/20 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-background/40">
