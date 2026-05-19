@@ -119,6 +119,38 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("domestic");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const [matcherData, setMatcherData] = useState({ currentRole: "", skills: "", goals: "" });
+  const [isMatching, setIsMatching] = useState(false);
+  const [matchResult, setMatchResult] = useState<{
+    recommendedPathway: string;
+    pathwayId: string;
+    confidence: string;
+    headline: string;
+    reasoning: string;
+    nextStep: string;
+    alternativePathway: string | null;
+  } | null>(null);
+
+  const handleMatcher = async (e: FormEvent) => {
+    e.preventDefault();
+    setIsMatching(true);
+    setMatchResult(null);
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}api/match`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(matcherData),
+      });
+      if (!res.ok) throw new Error("Analysis failed");
+      const data = await res.json() as { success: boolean; result: typeof matchResult };
+      setMatchResult(data.result);
+    } catch {
+      toast({ title: "Analysis Failed", description: "Please try again in a moment.", variant: "destructive" });
+    } finally {
+      setIsMatching(false);
+    }
+  };
+
   const handleFormSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -530,6 +562,155 @@ export default function Home() {
               </AnimateOnScroll>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── AI PATHWAY MATCHER ── */}
+      <section id="matcher" className="py-24 bg-gradient-to-br from-background to-muted/30">
+        <div className="container mx-auto px-4">
+          <AnimateOnScroll className="text-center max-w-3xl mx-auto mb-12">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-4">AI-Powered</span>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">AI Career Pathway Matcher</h2>
+            <p className="text-lg text-muted-foreground">Not sure which program is right for you? Tell our AI assistant about your background and goals — it will recommend the perfect PRAIT pathway in seconds.</p>
+          </AnimateOnScroll>
+
+          <AnimateOnScroll delay={0.1}>
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-background rounded-3xl shadow-xl border overflow-hidden">
+                {/* Header bar */}
+                <div className="bg-gradient-to-r from-primary to-secondary px-8 py-5 flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center">
+                    <Zap className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-white font-bold text-base">PRAIT AI Advisor</p>
+                    <p className="text-white/70 text-xs">Powered by AI • Instant recommendation</p>
+                  </div>
+                  <div className="ml-auto flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
+                    <span className="text-white/70 text-xs">Online</span>
+                  </div>
+                </div>
+
+                <div className="p-8 md:p-10">
+                  {!matchResult ? (
+                    <form onSubmit={handleMatcher} className="space-y-6">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="currentRole" className="text-sm font-semibold">What is your current job or situation? <span className="text-accent">*</span></Label>
+                        <Input
+                          id="currentRole"
+                          required
+                          placeholder="e.g. Registered Nurse in Nigeria, Unemployed recent graduate, Small business owner in Ghana..."
+                          className="rounded-xl bg-muted/40 border-transparent focus-visible:border-primary h-11"
+                          value={matcherData.currentRole}
+                          onChange={e => setMatcherData(m => ({ ...m, currentRole: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="skills" className="text-sm font-semibold">What are your key skills or qualifications?</Label>
+                        <Input
+                          id="skills"
+                          placeholder="e.g. 5 years nursing, BSc Computer Science, business management, customer service..."
+                          className="rounded-xl bg-muted/40 border-transparent focus-visible:border-primary h-11"
+                          value={matcherData.skills}
+                          onChange={e => setMatcherData(m => ({ ...m, skills: e.target.value }))}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="goals" className="text-sm font-semibold">What are you looking to achieve? <span className="text-accent">*</span></Label>
+                        <Input
+                          id="goals"
+                          required
+                          placeholder="e.g. Get a funded diploma in Canada, study at a Canadian college, expand my business to Canada..."
+                          className="rounded-xl bg-muted/40 border-transparent focus-visible:border-primary h-11"
+                          value={matcherData.goals}
+                          onChange={e => setMatcherData(m => ({ ...m, goals: e.target.value }))}
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        size="lg"
+                        disabled={isMatching}
+                        className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 text-white rounded-full text-base h-12 shadow-lg font-semibold"
+                      >
+                        {isMatching ? (
+                          <span className="flex items-center gap-2">
+                            <motion.span
+                              animate={{ rotate: 360 }}
+                              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                              className="inline-block"
+                            >
+                              <Zap className="h-4 w-4" />
+                            </motion.span>
+                            Analyzing your profile...
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-2">
+                            <Zap className="h-4 w-4" />
+                            Find My Pathway
+                          </span>
+                        )}
+                      </Button>
+                    </form>
+                  ) : (
+                    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-6">
+                      {/* Result card */}
+                      <div className="bg-gradient-to-br from-primary/5 to-secondary/10 rounded-2xl border border-primary/20 p-6 md:p-8">
+                        <div className="flex items-start gap-4 mb-5">
+                          <div className="h-12 w-12 rounded-2xl bg-accent/10 flex items-center justify-center flex-shrink-0">
+                            <Award className="h-6 w-6 text-accent" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <span className="text-xs font-bold uppercase tracking-widest text-secondary bg-secondary/10 rounded-full px-3 py-0.5">
+                                {matchResult.confidence} Confidence
+                              </span>
+                              <span className="text-xs text-muted-foreground">Best match</span>
+                            </div>
+                            <h3 className="text-xl md:text-2xl font-bold text-foreground">{matchResult.recommendedPathway}</h3>
+                          </div>
+                        </div>
+                        <p className="text-base font-semibold text-primary mb-3 italic">"{matchResult.headline}"</p>
+                        <p className="text-muted-foreground leading-relaxed mb-5">{matchResult.reasoning}</p>
+                        <div className="bg-accent/10 border border-accent/20 rounded-xl px-5 py-4 flex gap-3">
+                          <ArrowRight className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-accent mb-0.5">Your next step</p>
+                            <p className="text-sm text-foreground">{matchResult.nextStep}</p>
+                          </div>
+                        </div>
+                        {matchResult.alternativePathway && (
+                          <p className="text-xs text-muted-foreground mt-4 flex items-center gap-1.5">
+                            <CheckCircle className="h-3.5 w-3.5 text-secondary" />
+                            Also consider: <span className="font-semibold text-secondary">{matchResult.alternativePathway}</span>
+                          </p>
+                        )}
+                      </div>
+
+                      {/* CTAs */}
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <Button
+                          size="lg"
+                          className="flex-1 bg-accent hover:bg-accent/90 text-white rounded-full h-12 font-semibold"
+                          onClick={() => scrollTo("contact")}
+                        >
+                          Book Free Consultation
+                        </Button>
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          className="flex-1 rounded-full h-12"
+                          onClick={() => { setMatchResult(null); setMatcherData({ currentRole: "", skills: "", goals: "" }); }}
+                        >
+                          Try Again
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </AnimateOnScroll>
         </div>
       </section>
 
