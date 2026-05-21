@@ -225,6 +225,14 @@
   -webkit-text-fill-color: transparent;
   animation: shimmer-text 4s linear infinite;
 }
+.shimmer-gradient-light {
+  background: linear-gradient(90deg, #ffffff 0%, hsl(var(--secondary)) 35%, hsl(var(--accent)) 65%, #ffffff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-text 4s linear infinite;
+}
 
 @keyframes pulse-ring {
   0%   { transform: scale(1);   opacity: 0.6; }

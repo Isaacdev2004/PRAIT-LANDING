@@ -129,7 +129,7 @@ const TABS = [
 export default function Home() {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    name: "", email: "", phone: "", residency: "", interest: "", employment: [] as string[], message: ""
+    name: "", email: "", phone: "", residency: [] as string[], interest: "", employment: [] as string[], message: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("domestic");
@@ -177,7 +177,7 @@ export default function Home() {
       const res = await fetch(`${import.meta.env.BASE_URL}api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, employment: formData.employment.join(", ") }),
+        body: JSON.stringify({ ...formData, residency: formData.residency.join(", "), employment: formData.employment.join(", ") }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -187,7 +187,7 @@ export default function Home() {
         title: "Request Received!",
         description: "Thank you — we will be in touch shortly to schedule your free consultation.",
       });
-      setFormData({ name: "", email: "", phone: "", residency: "", interest: "", employment: [], message: "" });
+      setFormData({ name: "", email: "", phone: "", residency: [], interest: "", employment: [], message: "" });
     } catch (err) {
       toast({
         title: "Submission Failed",
@@ -203,6 +203,13 @@ export default function Home() {
     setFormData(f => ({
       ...f,
       employment: f.employment.includes(val) ? f.employment.filter(v => v !== val) : [...f.employment, val]
+    }));
+  };
+
+  const toggleResidency = (val: string) => {
+    setFormData(f => ({
+      ...f,
+      residency: f.residency.includes(val) ? f.residency.filter(v => v !== val) : [...f.residency, val]
     }));
   };
 
@@ -245,73 +252,68 @@ export default function Home() {
       </header>
 
       {/* ── HERO ── */}
-      <section id="hero" className="relative pt-24 pb-28 lg:pt-36 lg:pb-40 overflow-hidden">
-        <div className="absolute inset-0 -z-10 pointer-events-none">
-          <div className="float-slow absolute top-[-100px] right-[-80px] w-[650px] h-[650px] rounded-full bg-primary/6 blur-3xl" />
-          <div className="float-medium absolute bottom-[-60px] left-[-60px] w-[500px] h-[500px] rounded-full bg-secondary/6 blur-3xl" />
-          <div className="float-fast absolute top-[40%] right-[20%] w-[250px] h-[250px] rounded-full bg-accent/5 blur-2xl" />
-          {/* Decorative grid dots */}
-          <svg className="absolute inset-0 w-full h-full opacity-[0.025]" xmlns="http://www.w3.org/2000/svg">
+      <section id="hero" className="relative pt-24 pb-20 lg:pt-32 lg:pb-24 overflow-hidden" style={{ background: "hsl(221 83% 16%)" }}>
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="float-slow absolute top-[-120px] right-[-100px] w-[700px] h-[700px] rounded-full opacity-20" style={{ background: "radial-gradient(circle, hsl(180 100% 30%) 0%, transparent 70%)" }} />
+          <div className="float-medium absolute bottom-[-80px] left-[-80px] w-[550px] h-[550px] rounded-full opacity-15" style={{ background: "radial-gradient(circle, hsl(25 100% 50%) 0%, transparent 70%)" }} />
+          <div className="float-fast absolute top-[35%] right-[18%] w-[280px] h-[280px] rounded-full opacity-10" style={{ background: "radial-gradient(circle, white 0%, transparent 70%)" }} />
+          <svg className="absolute inset-0 w-full h-full opacity-[0.07]" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <pattern id="dot-grid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="1.5" fill="hsl(var(--primary))" />
+                <circle cx="2" cy="2" r="1.5" fill="white" />
               </pattern>
             </defs>
             <rect width="100%" height="100%" fill="url(#dot-grid)" />
           </svg>
         </div>
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div initial="hidden" animate="show" variants={stagger} className="max-w-5xl mx-auto text-center">
             <motion.div variants={fadeUp}>
-              <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-6">
-                Canada • Africa • Global
+              <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-white/10 rounded-full px-4 py-1.5 mb-6">
+                Bridging Ambition With Opportunity
               </span>
             </motion.div>
-            <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-4 leading-[1.1]">
-              Bridging Ambition<br />
-              <span className="shimmer-gradient">with Opportunity.</span>
+            <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.1]">
+              Fast-Track Your Career<br />
+              <span className="shimmer-gradient-light">in Canada and Beyond.</span>
             </motion.h1>
-            <motion.p variants={fadeUp} className="text-lg md:text-xl text-muted-foreground mb-3 font-medium">
-              Fast-Track Your Career in Canada and Beyond.
-            </motion.p>
-            <motion.p variants={fadeUp} className="text-base md:text-lg text-muted-foreground/80 mb-10 max-w-3xl mx-auto leading-relaxed">
+            <motion.p variants={fadeUp} className="text-base md:text-lg text-white/65 mb-12 max-w-3xl mx-auto leading-relaxed">
               Guiding domestic residents to funded career programs, international students to Canadian institutions, and entrepreneurs to global growth. We map the exact route to your success.
             </motion.p>
 
             {/* 4 Pathway Cards */}
-            <motion.div variants={stagger} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-10 text-left">
+            <motion.div variants={stagger} className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-12 text-left">
               {[
-                { label: "Start a Career in Canada", sub: "OSAP-funded diploma programs for domestic residents & new immigrants.", icon: GraduationCap, color: "primary", tab: "domestic" },
-                { label: "Study Internationally", sub: "Admissions support for international students applying to top Canadian colleges.", icon: Globe, color: "secondary", tab: "international" },
-                { label: "Corporate Training & Upskilling", sub: "International training and bootcamps for corporate teams, professionals & graduates.", icon: Briefcase, color: "secondary", tab: "training" },
-                { label: "Business Consulting", sub: "Business registration, grants, web development & global trade strategies.", icon: TrendingUp, color: "accent", tab: "business" },
+                { label: "Start a Career in Canada", sub: "OSAP-funded diploma programs for domestic residents & new immigrants.", icon: GraduationCap, tab: "domestic" },
+                { label: "Study Internationally", sub: "Admissions support for international students applying to top Canadian colleges.", icon: Globe, tab: "international" },
+                { label: "Corporate Training & Upskilling", sub: "International training and bootcamps for corporate teams, professionals & graduates.", icon: Briefcase, tab: "training" },
+                { label: "Business Consulting", sub: "Business registration, grants, web development & global trade strategies.", icon: TrendingUp, tab: "business" },
               ].map((card, i) => (
-                <motion.div key={i} variants={fadeUp}>
-                  <Card
-                    className="group h-full border border-border/60 hover:border-primary/30 hover:shadow-lg transition-all duration-300 rounded-2xl cursor-pointer bg-card"
-                    onClick={() => { scrollTo("programs"); setActiveTab(card.tab); }}
-                    data-testid={`hero-card-${card.tab}`}
-                  >
-                    <CardContent className="p-5 flex flex-col gap-3 h-full">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center bg-${card.color}/10 text-${card.color} group-hover:scale-110 transition-transform`}>
-                        <card.icon className="h-5 w-5" />
-                      </div>
-                      <h3 className="font-bold text-sm text-foreground leading-snug">{card.label}</h3>
-                      <p className="text-xs text-muted-foreground leading-relaxed flex-1">{card.sub}</p>
-                      <span className={`text-xs font-semibold text-${card.color} flex items-center gap-1 group-hover:gap-2 transition-all`}>
-                        Explore <ArrowRight className="h-3 w-3" />
-                      </span>
-                    </CardContent>
-                  </Card>
+                <motion.div
+                  key={i}
+                  variants={fadeUp}
+                  whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                  className="group h-full rounded-2xl border border-white/15 bg-white/8 backdrop-blur-sm p-5 flex flex-col gap-3 cursor-pointer hover:bg-white/12 hover:border-white/30 transition-all duration-300"
+                  onClick={() => { scrollTo("programs"); setActiveTab(card.tab); }}
+                  data-testid={`hero-card-${card.tab}`}
+                >
+                  <div className="h-10 w-10 rounded-xl flex items-center justify-center bg-white/15 text-white group-hover:scale-110 transition-transform">
+                    <card.icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-bold text-sm text-white leading-snug">{card.label}</h3>
+                  <p className="text-xs text-white/55 leading-relaxed flex-1">{card.sub}</p>
+                  <span className="text-xs font-semibold text-accent flex items-center gap-1 group-hover:gap-2 transition-all">
+                    Explore <ArrowRight className="h-3 w-3" />
+                  </span>
                 </motion.div>
               ))}
             </motion.div>
 
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-white rounded-full text-base h-13 px-8 shadow-lg shadow-accent/25" onClick={() => scrollTo("contact")} data-testid="hero-primary-cta">
+              <Button size="lg" className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-white rounded-full text-base px-8 h-13 shadow-lg shadow-accent/30" onClick={() => scrollTo("contact")} data-testid="hero-primary-cta">
                 Book Free Consultation
               </Button>
-              <Button size="lg" variant="outline" className="w-full sm:w-auto rounded-full text-base h-13 px-8" onClick={() => scrollTo("programs")} data-testid="hero-explore">
+              <Button size="lg" className="w-full sm:w-auto rounded-full text-base px-8 h-13 border border-white/30 bg-transparent text-white hover:bg-white/10" onClick={() => scrollTo("programs")} data-testid="hero-explore">
                 Explore Pathways
               </Button>
             </motion.div>
@@ -530,19 +532,54 @@ export default function Home() {
                       ))}
                     </motion.ul>
                   </div>
-                  <div className="p-10 flex flex-col justify-center">
-                    <h4 className="text-xl font-bold mb-4 text-foreground">Ready to get started?</h4>
-                    <p className="text-muted-foreground mb-6 leading-relaxed text-sm">
-                      Book a free, no-obligation consultation with one of our pathway specialists. We'll assess your situation and map the clearest route to your goals.
-                    </p>
-                    <div className="space-y-3">
-                      <Button className="w-full bg-accent hover:bg-accent/90 text-white rounded-full shadow-md" onClick={() => scrollTo("contact")} data-testid={`tab-cta-${activeTab}`}>
-                        {activeTabData.cta} <ArrowRight className="h-4 w-4 ml-2" />
-                      </Button>
-                      <Button variant="outline" className="w-full rounded-full" onClick={() => scrollTo("contact")}>
-                        Ask a Question
-                      </Button>
-                    </div>
+                  <div className="p-8 flex flex-col justify-center">
+                    {activeTab === "domestic" ? (
+                      <AnimatePresence mode="wait">
+                        <motion.div key="focus-areas" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                          <h4 className="text-base font-bold mb-4 text-foreground">High Demand Focus Areas:</h4>
+                          <div className="space-y-4 mb-6">
+                            {[
+                              { cat: "Healthcare & Community Services", jobs: ["Personal Support Worker (PSW)", "Registered Practical Nurse (RPN)", "Medical Office Administration", "Health Information Management"] },
+                              { cat: "Business & Administration", jobs: ["Accounting & Bookkeeping", "Human Resources", "Project Management", "Business Administration"] },
+                              { cat: "Information Technology (IT)", jobs: ["Data Analytics", "Cybersecurity", "Web Development", "Software Testing (QA)"] },
+                              { cat: "Other In-Demand Careers", jobs: ["Paralegal", "Early Childhood Education", "Supply Chain Management", "Social Service Worker"] },
+                            ].map((section, si) => (
+                              <div key={si}>
+                                <p className="text-xs font-bold text-primary uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
+                                  <CheckCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                                  {section.cat}
+                                </p>
+                                <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 pl-5">
+                                  {section.jobs.map((job, ji) => (
+                                    <span key={ji} className="text-xs text-muted-foreground leading-relaxed">· {job}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                          <Button className="w-full bg-accent hover:bg-accent/90 text-white rounded-full shadow-md" onClick={() => scrollTo("contact")} data-testid={`tab-cta-${activeTab}`}>
+                            {activeTabData.cta} <ArrowRight className="h-4 w-4 ml-2" />
+                          </Button>
+                        </motion.div>
+                      </AnimatePresence>
+                    ) : (
+                      <AnimatePresence mode="wait">
+                        <motion.div key="get-started" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                          <h4 className="text-xl font-bold mb-4 text-foreground">Ready to get started?</h4>
+                          <p className="text-muted-foreground mb-6 leading-relaxed text-sm">
+                            Book a free, no-obligation consultation with one of our pathway specialists. We'll assess your situation and map the clearest route to your goals.
+                          </p>
+                          <div className="space-y-3">
+                            <Button className="w-full bg-accent hover:bg-accent/90 text-white rounded-full shadow-md" onClick={() => scrollTo("contact")} data-testid={`tab-cta-${activeTab}`}>
+                              {activeTabData.cta} <ArrowRight className="h-4 w-4 ml-2" />
+                            </Button>
+                            <Button variant="outline" className="w-full rounded-full" onClick={() => scrollTo("contact")}>
+                              Ask a Question
+                            </Button>
+                          </div>
+                        </motion.div>
+                      </AnimatePresence>
+                    )}
                   </div>
                 </div>
               </div>
@@ -810,31 +847,39 @@ export default function Home() {
                         <Input id="email" type="email" required placeholder="john@example.com" className="rounded-lg bg-muted/40 border-transparent focus-visible:border-primary" data-testid="form-input-email" value={formData.email} onChange={e => setFormData(f => ({ ...f, email: e.target.value }))} />
                       </div>
                     </div>
-                    <div className="grid md:grid-cols-2 gap-5">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="phone">Phone Number</Label>
-                        <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" className="rounded-lg bg-muted/40 border-transparent focus-visible:border-primary" data-testid="form-input-phone" value={formData.phone} onChange={e => setFormData(f => ({ ...f, phone: e.target.value }))} />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor="residency">Residency Status <span className="text-accent">*</span></Label>
-                        <Select required value={formData.residency} onValueChange={val => setFormData(f => ({ ...f, residency: val }))}>
-                          <SelectTrigger id="residency" className="rounded-lg bg-muted/40 border-transparent" data-testid="form-select-residency">
-                            <SelectValue placeholder="Select status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="citizen">Canadian Citizen</SelectItem>
-                            <SelectItem value="pr">Permanent Resident</SelectItem>
-                            <SelectItem value="permit">Work / Study Permit</SelectItem>
-                            <SelectItem value="international">International (Outside Canada)</SelectItem>
-                          </SelectContent>
-                        </Select>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" className="rounded-lg bg-muted/40 border-transparent focus-visible:border-primary" data-testid="form-input-phone" value={formData.phone} onChange={e => setFormData(f => ({ ...f, phone: e.target.value }))} />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Residency Status <span className="text-accent">*</span> <span className="text-xs text-muted-foreground font-normal">(select all that apply)</span></Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {[
+                          "Canadian Citizen",
+                          "Permanent Resident",
+                          "Work / Study Permit",
+                          "International Student (Outside Canada)",
+                          "New Immigrant",
+                          "Protected Person / Refugee",
+                        ].map(opt => (
+                          <div key={opt} className="flex items-center gap-2">
+                            <Checkbox
+                              id={`res-${opt}`}
+                              checked={formData.residency.includes(opt)}
+                              onCheckedChange={() => toggleResidency(opt)}
+                              data-testid={`form-check-res-${opt.toLowerCase().replace(/[\s/()]/g,"-")}`}
+                            />
+                            <label htmlFor={`res-${opt}`} className="text-sm cursor-pointer leading-tight">{opt}</label>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label>Employment Status <span className="text-accent">*</span> <span className="text-xs text-muted-foreground font-normal">(select all that apply)</span></Label>
                       <div className="grid grid-cols-2 gap-2">
-                        {["Employed", "Unemployed", "Business Owner", "Corporate Representative"].map(opt => (
+                        {["Employed", "Unemployed", "Student", "Business Owner", "Corporate Representative"].map(opt => (
                           <div key={opt} className="flex items-center gap-2">
                             <Checkbox
                               id={`emp-${opt}`}
