@@ -9,7 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import {
   GraduationCap, Briefcase, TrendingUp, CheckCircle, Globe, BookOpen,
-  MapPin, ArrowRight, Star, Building2, Users, Award, Zap, Menu, X
+  MapPin, ArrowRight, Star, Building2, Users, Award, Zap, Menu, X,
+  DollarSign, FileText, Monitor,
 } from "lucide-react";
 import { motion, useInView, AnimatePresence, animate as animateValue } from "framer-motion";
 import { FaLinkedinIn, FaFacebookF, FaInstagram, FaTiktok, FaYoutube } from "react-icons/fa6";
@@ -64,65 +65,75 @@ const TABS = [
     id: "domestic",
     label: "Domestic Career Colleges",
     icon: GraduationCap,
-    headline: "Start a High-Paying Career in Canada",
-    subhead: "Funded diploma programs for residents & new immigrants",
-    bullets: [
-      "OSAP & government-funded programs available",
-      "Fast-tracked, flexible schedules designed for working adults",
-      "Fully recognized diplomas from accredited institutions",
-      "Career placement support included",
-      "Programs in healthcare, IT, business, trades & more",
-    ],
-    cta: "Explore Career Programs",
     color: "primary",
+    audience: "FOR CANADIANS & PERMANENT RESIDENTS",
+    audienceColor: "text-accent",
+    audienceBg: "bg-accent/10",
+    cardHeadline: "Start a High-Paying Career in Canada",
+    cardSubhead: "OSAP-funded diploma programs for domestic residents & new immigrants",
+    headline: "Stop settling for minimum wage. Transition to a professional career.",
+    description: "Whether you are a new immigrant whose credentials don't match the market, or a hard worker looking to upskill from labor jobs, we place you in recognized private career colleges tailored for mature students.",
+    bullets: [
+      { title: "OSAP Eligible:", desc: "Many programs are fully covered by government funding." },
+      { title: "Flexible Learning:", desc: "Online/hybrid, morning and evening classes designed around your life." },
+      { title: "Fast-Tracked:", desc: "Get job-ready in months, not years." },
+    ],
+    cta: "See If You Qualify For Funding",
+    ctaBg: "bg-accent hover:bg-accent/90",
   },
   {
     id: "international",
     label: "International Admissions",
     icon: Globe,
-    headline: "Study at Top Canadian Colleges",
-    subhead: "End-to-end admissions & visa support for African students",
-    bullets: [
-      "Partner institution: Conestoga College",
-      "Full application management & document preparation",
-      "Student visa guidance and processing support",
-      "Pre-arrival and settlement assistance",
-      "Scholarship and funding identification",
-    ],
-    cta: "View Admissions Process",
     color: "secondary",
+    audience: "FOR GLOBAL STUDENTS",
+    audienceColor: "text-secondary",
+    audienceBg: "bg-secondary/10",
+    cardHeadline: "Study at Top Canadian Colleges",
+    cardSubhead: "End-to-end admissions & visa support for African & global students",
+    headline: "Your bridge to premium Canadian education.",
+    description: "Navigating international admissions and visas is complex. We provide end-to-end support for students from Africa and around the globe applying to prestigious Canadian institutions.",
+    bullets: [
+      { title: "Official Agent Network:", desc: "Recognized recruitment partner for top schools, including Conestoga College." },
+      { title: "End-to-End Support:", desc: "From school selection and application to pre-departure briefings." },
+    ],
+    cta: "Start Your Application Journey",
+    ctaBg: "bg-secondary hover:bg-secondary/90",
   },
   {
     id: "training",
     label: "Corporate Training & Upskilling",
     icon: Briefcase,
-    headline: "Build the Skills the Modern Market Demands",
-    subhead: "Bootcamps, corporate training & international excursions",
-    bullets: [
-      "AI & Cybersecurity intensive bootcamps",
-      "Resume & LinkedIn optimization",
-      "Digital skills & workplace technology training",
-      "Corporate team upskilling packages",
-      "International training excursions for professionals",
-    ],
-    cta: "View Training Programs",
     color: "secondary",
+    audience: "FOR CORPORATE TEAMS & PROFESSIONALS",
+    audienceColor: "text-accent",
+    audienceBg: "bg-accent/10",
+    cardHeadline: "Build Skills the Modern Market Demands",
+    cardSubhead: "Bootcamps, corporate training & international excursions for professionals",
+    headline: "Elevate your workforce with world-class upskilling.",
+    description: "We offer specialized international executive training for corporate bodies, alongside intensive upskilling bootcamps (AI, Tech & Productivity) focused on maximizing efficiency for teams and individuals.",
+    bullets: [
+      { title: "Executive Training Retreats:", desc: "Customized programs linking international organizations with Canadian universities." },
+      { title: "Targeted Upskilling:", desc: "AI, Tech, and Productivity bootcamps for professionals, artisans, and fresh graduates." },
+    ],
+    cta: "Discuss Training Solutions",
+    ctaBg: "bg-primary hover:bg-primary/90",
   },
   {
     id: "business",
     label: "Business Consulting",
     icon: TrendingUp,
-    headline: "Scale Your Business. Expand Your Reach.",
-    subhead: "Comprehensive consulting for entrepreneurs & enterprises",
-    bullets: [
-      "Canadian business registration & operations",
-      "Government grants & loans applications",
-      "Branding, web development & digital marketing",
-      "Business accounting & taxation",
-      "Bilateral trade opportunities & global expansion",
-    ],
-    cta: "Book a Strategy Session",
     color: "accent",
+    audience: "FOR ENTREPRENEURS & ENTERPRISES",
+    audienceColor: "text-primary",
+    audienceBg: "bg-primary/10",
+    cardHeadline: "Scale Your Business. Expand Your Reach.",
+    cardSubhead: "Comprehensive consulting for entrepreneurs & enterprises globally",
+    headline: "Scale your operations and dominate your market.",
+    description: "We provide comprehensive consulting to help business owners register their operations, access funding, establish a powerful digital footprint, and expand into global markets with confidence.",
+    bullets: [],
+    cta: "Book a Strategy Session",
+    ctaBg: "bg-primary hover:bg-primary/90",
   },
 ];
 
@@ -406,8 +417,8 @@ export default function Home() {
                       >
                         <tab.icon className="h-6 w-6" />
                       </motion.div>
-                      <h3 className="text-lg font-bold mb-2">{tab.headline}</h3>
-                      <p className="text-sm text-muted-foreground mb-5 flex-1 leading-relaxed">{tab.subhead}</p>
+                      <h3 className="text-lg font-bold mb-2">{tab.cardHeadline}</h3>
+                      <p className="text-sm text-muted-foreground mb-5 flex-1 leading-relaxed">{tab.cardSubhead}</p>
                       <Button variant="ghost" size="sm" className={`rounded-full w-full border border-${tab.color}/20 hover:bg-${tab.color}/5 text-${tab.color} group/btn`}
                         onClick={() => { setActiveTab(tab.id); scrollTo("programs"); }} data-testid={`solution-${tab.id}-btn`}>
                         {tab.cta} <ArrowRight className="h-3 w-3 ml-1 group-hover/btn:translate-x-1 transition-transform" />
@@ -486,13 +497,12 @@ export default function Home() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 data-testid={`tab-${tab.id}`}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border ${
+                className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 border ${
                   activeTab === tab.id
                     ? "bg-primary text-primary-foreground border-primary shadow-md"
                     : "bg-background text-muted-foreground border-border hover:border-primary/40 hover:text-foreground"
                 }`}
               >
-                <tab.icon className="h-4 w-4" />
                 {tab.label}
               </button>
             ))}
@@ -500,115 +510,134 @@ export default function Home() {
 
           {/* Tab Content */}
           <AnimatePresence mode="wait">
-            <motion.div key={activeTab} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.3 }}>
+            <motion.div key={activeTab} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.28 }}>
               <div className="max-w-5xl mx-auto bg-background rounded-3xl shadow-xl border overflow-hidden">
                 <div className="grid md:grid-cols-2">
-                  <div className={`bg-gradient-to-br from-primary to-primary/80 text-primary-foreground p-10`}>
-                    <motion.div
-                      initial={{ scale: 0.7, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
-                      className={`h-14 w-14 rounded-2xl bg-white/10 flex items-center justify-center mb-6`}
-                    >
-                      <activeTabData.icon className="h-7 w-7 text-white" />
-                    </motion.div>
-                    <h3 className="text-2xl font-bold mb-2">{activeTabData.headline}</h3>
-                    <p className="text-primary-foreground/80 mb-8">{activeTabData.subhead}</p>
-                    <motion.ul
-                      className="space-y-3"
-                      initial="hidden"
-                      animate="show"
-                      variants={{ show: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } } }}
-                    >
-                      {activeTabData.bullets.map((b, i) => (
-                        <motion.li
-                          key={i}
-                          variants={{ hidden: { opacity: 0, x: -16 }, show: { opacity: 1, x: 0, transition: { duration: 0.4 } } }}
-                          className="flex items-start gap-3 text-sm"
-                        >
-                          <CheckCircle className="h-4 w-4 text-accent flex-shrink-0 mt-0.5" />
-                          <span>{b}</span>
-                        </motion.li>
-                      ))}
-                    </motion.ul>
-                  </div>
-                  <div className="p-8 flex flex-col justify-center">
-                    {activeTab === "domestic" ? (
-                      <AnimatePresence mode="wait">
-                        <motion.div key="focus-areas" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                          <h4 className="text-base font-bold mb-4 text-foreground">High Demand Focus Areas:</h4>
-                          <div className="space-y-4 mb-6">
-                            {[
-                              { cat: "Healthcare & Community Services", jobs: ["Personal Support Worker (PSW)", "Registered Practical Nurse (RPN)", "Medical Office Administration", "Health Information Management"] },
-                              { cat: "Business & Administration", jobs: ["Accounting & Bookkeeping", "Human Resources", "Project Management", "Business Administration"] },
-                              { cat: "Information Technology (IT)", jobs: ["Data Analytics", "Cybersecurity", "Web Development", "Software Testing (QA)"] },
-                              { cat: "Other In-Demand Careers", jobs: ["Paralegal", "Early Childhood Education", "Supply Chain Management", "Social Service Worker"] },
-                            ].map((section, si) => (
-                              <div key={si}>
-                                <p className="text-xs font-bold text-primary uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
-                                  <CheckCircle className="h-3.5 w-3.5 flex-shrink-0" />
-                                  {section.cat}
-                                </p>
-                                <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 pl-5">
-                                  {section.jobs.map((job, ji) => (
-                                    <span key={ji} className="text-xs text-muted-foreground leading-relaxed">· {job}</span>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                          <Button className="w-full bg-accent hover:bg-accent/90 text-white rounded-full shadow-md" onClick={() => scrollTo("contact")} data-testid={`tab-cta-${activeTab}`}>
-                            {activeTabData.cta} <ArrowRight className="h-4 w-4 ml-2" />
-                          </Button>
-                        </motion.div>
-                      </AnimatePresence>
-                    ) : (
-                      <AnimatePresence mode="wait">
-                        <motion.div key="get-started" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                          <h4 className="text-xl font-bold mb-4 text-foreground">Ready to get started?</h4>
-                          <p className="text-muted-foreground mb-6 leading-relaxed text-sm">
-                            Book a free, no-obligation consultation with one of our pathway specialists. We'll assess your situation and map the clearest route to your goals.
-                          </p>
-                          <div className="space-y-3">
-                            <Button className="w-full bg-accent hover:bg-accent/90 text-white rounded-full shadow-md" onClick={() => scrollTo("contact")} data-testid={`tab-cta-${activeTab}`}>
-                              {activeTabData.cta} <ArrowRight className="h-4 w-4 ml-2" />
-                            </Button>
-                            <Button variant="outline" className="w-full rounded-full" onClick={() => scrollTo("contact")}>
-                              Ask a Question
-                            </Button>
-                          </div>
-                        </motion.div>
-                      </AnimatePresence>
+
+                  {/* Left — description + bullets + CTA */}
+                  <div className="p-10 border-b md:border-b-0 md:border-r border-border flex flex-col">
+                    <span className={`inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest ${activeTabData.audienceColor} ${activeTabData.audienceBg} rounded-full px-3 py-1 mb-6 self-start`}>
+                      <activeTabData.icon className="h-3.5 w-3.5" />
+                      {activeTabData.audience}
+                    </span>
+                    <h3 className="text-2xl font-bold text-foreground mb-4 leading-tight">{activeTabData.headline}</h3>
+                    <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{activeTabData.description}</p>
+                    {activeTabData.bullets.length > 0 && (
+                      <motion.ul
+                        className="space-y-3 mb-8"
+                        initial="hidden"
+                        animate="show"
+                        variants={{ show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } } }}
+                      >
+                        {activeTabData.bullets.map((b, i) => (
+                          <motion.li
+                            key={i}
+                            variants={{ hidden: { opacity: 0, x: -12 }, show: { opacity: 1, x: 0, transition: { duration: 0.35 } } }}
+                            className="flex items-start gap-3 text-sm"
+                          >
+                            <CheckCircle className="h-4 w-4 text-secondary flex-shrink-0 mt-0.5" />
+                            <span><span className="font-semibold text-foreground">{b.title}</span> {b.desc}</span>
+                          </motion.li>
+                        ))}
+                      </motion.ul>
                     )}
+                    <Button
+                      className={`mt-auto w-full text-white rounded-full h-11 text-sm font-semibold ${activeTabData.ctaBg}`}
+                      onClick={() => scrollTo("contact")}
+                      data-testid={`tab-cta-${activeTab}`}
+                    >
+                      {activeTabData.cta}
+                    </Button>
+                  </div>
+
+                  {/* Right — tab-specific panel */}
+                  <div className="p-10 bg-muted/20 flex flex-col justify-center">
+
+                    {activeTab === "domestic" && (
+                      <>
+                        <h4 className="text-sm font-bold text-secondary mb-4">High-Demand Focus Areas:</h4>
+                        <div className="space-y-2">
+                          {[
+                            { cat: "Healthcare & Community Services", icon: Users, jobs: ["Personal Support Worker (PSW)", "Medical Office Admin", "Medical Esthetician", "Developmental Service Worker (DSW)", "Community Service Worker (CSW)", "Health Services Admin"] },
+                            { cat: "Business", icon: Building2, jobs: ["Supply Chain Management", "Accounting & Payroll", "Project Management"] },
+                            { cat: "Information Technology (IT)", icon: Monitor, jobs: ["Cybersecurity", "Data Analytics", "Digital Marketing", "Web Development", "Software Quality Assurance And Testing Analyst"] },
+                            { cat: "Other In-Demand Careers", icon: Zap, jobs: ["Event Planner", "Building Maintenance & Property Mgmt", "Hospitality & Tourism Operations", "Hair Styling"] },
+                          ].map((section, si) => (
+                            <div key={si} className="bg-background rounded-xl border px-4 py-3">
+                              <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-1.5">
+                                <section.icon className="h-3.5 w-3.5 text-secondary flex-shrink-0" />
+                                {section.cat}
+                              </p>
+                              <div className="grid grid-cols-2 gap-x-3 gap-y-0.5">
+                                {section.jobs.map((job, ji) => (
+                                  <span key={ji} className="text-xs text-muted-foreground leading-relaxed">· {job}</span>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {activeTab === "international" && (
+                      <div className="flex flex-col items-center text-center gap-5">
+                        <div className="h-20 w-20 rounded-2xl bg-secondary/10 flex items-center justify-center">
+                          <GraduationCap className="h-10 w-10 text-secondary" />
+                        </div>
+                        <h4 className="text-xl font-bold text-foreground">Conestoga & Partner Colleges</h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          Join thousands of successful international students who have utilized PRAIT Consulting to secure placements in Conestoga College and other leading public community colleges across Canada.
+                        </p>
+                      </div>
+                    )}
+
+                    {activeTab === "training" && (
+                      <>
+                        <h4 className="text-sm font-bold text-foreground mb-4">Our Training Modules:</h4>
+                        <div className="space-y-3">
+                          {[
+                            { icon: MapPin, label: "International Corporate Training & Excursions" },
+                            { icon: Zap, label: "Upskilling Bootcamps: AI, Tech & Productivity" },
+                            { icon: Users, label: "Career Advancement: Resume & LinkedIn Optimization" },
+                          ].map((item, i) => (
+                            <div key={i} className="flex items-center gap-4 bg-background border rounded-xl p-4 text-sm font-medium text-foreground">
+                              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <item.icon className="h-4 w-4 text-primary" />
+                              </div>
+                              {item.label}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
+                    {activeTab === "business" && (
+                      <>
+                        <h4 className="text-sm font-bold text-foreground mb-4">Our Consulting Services:</h4>
+                        <div className="space-y-3">
+                          {[
+                            { icon: Building2, label: "Canadian Business Registration & Operations" },
+                            { icon: DollarSign, label: "Canadian Business Grants & Loans" },
+                            { icon: FileText, label: "Business Accounting & Taxation" },
+                            { icon: Monitor, label: "Branding, Web Development & Digital Marketing" },
+                            { icon: Globe, label: "Bilateral Trade Opportunities & Global Reach" },
+                          ].map((item, i) => (
+                            <div key={i} className="flex items-center gap-4 bg-background border rounded-xl p-4 text-sm font-medium text-foreground">
+                              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <item.icon className="h-4 w-4 text-primary" />
+                              </div>
+                              {item.label}
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+
                   </div>
                 </div>
               </div>
             </motion.div>
           </AnimatePresence>
-
-          {/* Business consulting detail strip */}
-          {activeTab === "business" && (
-            <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="max-w-5xl mx-auto mt-8">
-              <div className="bg-background rounded-2xl border p-8">
-                <h4 className="font-bold text-lg mb-5 text-foreground">For Entrepreneurs & Enterprises — Our Consulting Services:</h4>
-                <div className="grid sm:grid-cols-2 gap-3">
-                  {[
-                    "Canadian Business Registration & Operations",
-                    "Canadian Business Grants & Loans",
-                    "Business Accounting & Taxation",
-                    "Branding, Web Development & Digital Marketing",
-                    "Bilateral Trade Opportunities & Global Reach",
-                    "AI Tools Integration & Business Optimization",
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3 text-sm text-foreground">
-                      <div className="h-1.5 w-1.5 rounded-full bg-accent flex-shrink-0" />
-                      {item}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          )}
         </div>
       </section>
 
