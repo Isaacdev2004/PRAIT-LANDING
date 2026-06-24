@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useToast } from "@/hooks/use-toast";
 import {
   GraduationCap, Briefcase, TrendingUp, CheckCircle, Globe, BookOpen,
@@ -58,6 +58,30 @@ function AnimatedCounter({ to, suffix = "", duration = 2 }: { to: number; suffix
     return () => controls.stop();
   }, [inView, to, suffix, duration]);
   return <span ref={ref}>0{suffix}</span>;
+}
+
+function SectionHeader({
+  eyebrow,
+  title,
+  subtitle,
+  dark = false,
+  className = "",
+}: {
+  eyebrow: string;
+  title: ReactNode;
+  subtitle?: string;
+  dark?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={`text-center max-w-4xl mx-auto ${className}`}>
+      <span className={`section-eyebrow${dark ? " section-eyebrow-dark" : ""}`}>{eyebrow}</span>
+      <h2 className={`section-title ${dark ? "text-primary-foreground" : "text-foreground"}`}>{title}</h2>
+      {subtitle && (
+        <p className={`section-subtitle ${dark ? "text-primary-foreground/75" : "text-muted-foreground"}`}>{subtitle}</p>
+      )}
+    </div>
+  );
 }
 
 const TABS = [
@@ -140,7 +164,8 @@ const TABS = [
 export default function Home() {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
-    name: "", email: "", phone: "", residency: [] as string[], interest: "", employment: [] as string[], message: ""
+    firstName: "", lastName: "", email: "", phone: "",
+    residency: "", employment: "", profile: "", interest: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("domestic");
@@ -183,12 +208,24 @@ export default function Home() {
 
   const handleFormSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    if (!formData.residency) {
+      toast({ title: "Residency Required", description: "Please select your residency status.", variant: "destructive" });
+      return;
+    }
+    if (!formData.employment) {
+      toast({ title: "Employment Required", description: "Please select your employment status.", variant: "destructive" });
+      return;
+    }
+    if (!formData.profile) {
+      toast({ title: "Profile Required", description: "Please select the option that best describes you.", variant: "destructive" });
+      return;
+    }
     setIsSubmitting(true);
     try {
       const res = await fetch(`${import.meta.env.BASE_URL}api/contact`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, residency: formData.residency.join(", "), employment: formData.employment.join(", ") }),
+        body: JSON.stringify(formData),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -198,7 +235,10 @@ export default function Home() {
         title: "Request Received!",
         description: "Thank you — we will be in touch shortly to schedule your free consultation.",
       });
-      setFormData({ name: "", email: "", phone: "", residency: [], interest: "", employment: [], message: "" });
+      setFormData({
+        firstName: "", lastName: "", email: "", phone: "",
+        residency: "", employment: "", profile: "", interest: "",
+      });
     } catch (err) {
       toast({
         title: "Submission Failed",
@@ -208,20 +248,6 @@ export default function Home() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const toggleEmployment = (val: string) => {
-    setFormData(f => ({
-      ...f,
-      employment: f.employment.includes(val) ? f.employment.filter(v => v !== val) : [...f.employment, val]
-    }));
-  };
-
-  const toggleResidency = (val: string) => {
-    setFormData(f => ({
-      ...f,
-      residency: f.residency.includes(val) ? f.residency.filter(v => v !== val) : [...f.residency, val]
-    }));
   };
 
   const scrollTo = (id: string) => {
@@ -263,11 +289,11 @@ export default function Home() {
       </header>
 
       {/* ── HERO ── */}
-      <section id="hero" className="relative pt-24 pb-20 lg:pt-32 lg:pb-24 overflow-hidden" style={{ background: "hsl(221 83% 16%)" }}>
+      <section id="hero" className="relative pt-24 pb-20 lg:pt-32 lg:pb-24 overflow-hidden hero-section">
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="float-slow absolute top-[-120px] right-[-100px] w-[700px] h-[700px] rounded-full opacity-20" style={{ background: "radial-gradient(circle, hsl(180 100% 30%) 0%, transparent 70%)" }} />
-          <div className="float-medium absolute bottom-[-80px] left-[-80px] w-[550px] h-[550px] rounded-full opacity-15" style={{ background: "radial-gradient(circle, hsl(25 100% 50%) 0%, transparent 70%)" }} />
-          <div className="float-fast absolute top-[35%] right-[18%] w-[280px] h-[280px] rounded-full opacity-10" style={{ background: "radial-gradient(circle, white 0%, transparent 70%)" }} />
+          <div className="float-slow absolute top-[-120px] right-[-100px] w-[700px] h-[700px] rounded-full opacity-[0.08]" style={{ background: "radial-gradient(circle, hsl(180 60% 25%) 0%, transparent 70%)" }} />
+          <div className="float-medium absolute bottom-[-80px] left-[-80px] w-[550px] h-[550px] rounded-full opacity-[0.06]" style={{ background: "radial-gradient(circle, hsl(25 80% 40%) 0%, transparent 70%)" }} />
+          <div className="float-fast absolute top-[35%] right-[18%] w-[280px] h-[280px] rounded-full opacity-[0.05]" style={{ background: "radial-gradient(circle, white 0%, transparent 70%)" }} />
           <svg className="absolute inset-0 w-full h-full opacity-[0.07]" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <pattern id="dot-grid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
@@ -280,8 +306,8 @@ export default function Home() {
         <div className="container mx-auto px-4 relative z-10">
           <motion.div initial="hidden" animate="show" variants={stagger} className="max-w-5xl mx-auto text-center">
             <motion.div variants={fadeUp}>
-              <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-white/10 rounded-full px-4 py-1.5 mb-6">
-                Bridging Ambition With Opportunity
+              <span className="hero-badge">
+                Your Ambition. Our Roadmap. Real Results.
               </span>
             </motion.div>
             <motion.h1 variants={fadeUp} className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-6 leading-[1.1]">
@@ -360,15 +386,15 @@ export default function Home() {
       </section>
 
       {/* ── PROBLEM / HOOK ── */}
-      <section className="py-24 bg-background">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <AnimateOnScroll className="text-center">
-            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-6">Why PRAIT?</span>
-            <h2 className="text-3xl md:text-5xl font-bold mb-6 text-foreground leading-tight">You are capable of more.<br />The path just isn't clear yet.</h2>
-            <p className="text-lg text-muted-foreground leading-relaxed mb-10">
-              Career confusion. Credential gaps. Immigration uncertainty. Skills that don't match the modern market.
-              The journey to a better life is complex — and navigating it alone is overwhelming.
-            </p>
+      <section className="py-24 section-bg-why">
+        <div className="container mx-auto px-4 max-w-4xl relative z-10">
+          <AnimateOnScroll>
+            <SectionHeader
+              eyebrow="Why PRAIT?"
+              title={<>You Are Capable of More.<br /><span className="text-primary">The Path Just Isn&apos;t Clear Yet.</span></>}
+              subtitle="Career confusion. Credential gaps. Immigration uncertainty. Skills that don't match the modern market. The journey to a better life is complex — and navigating it alone is overwhelming."
+              className="mb-10"
+            />
           </AnimateOnScroll>
           <AnimateOnScroll delay={0.15}>
             <div className="grid md:grid-cols-3 gap-6">
@@ -377,7 +403,7 @@ export default function Home() {
                 { icon: Award, title: "Credentials Not Recognized", desc: "Your qualifications may not translate. We know exactly which programs bridge that gap." },
                 { icon: Globe, title: "Complex Immigration Process", desc: "Visas, permits, applications — it's a full-time job. Let us handle the complexity." },
               ].map((p, i) => (
-                <div key={i} className="flex flex-col items-center text-center p-6 rounded-2xl bg-muted/30 border border-border/50">
+                <div key={i} className="flex flex-col items-center text-center p-6 rounded-2xl bg-white border border-border/60 shadow-sm">
                   <div className="h-12 w-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4">
                     <p.icon className="h-6 w-6" />
                   </div>
@@ -388,18 +414,20 @@ export default function Home() {
             </div>
           </AnimateOnScroll>
           <AnimateOnScroll delay={0.2} className="text-center mt-10">
-            <p className="text-xl font-bold text-primary">We've walked this path. We know the way.</p>
+            <p className="text-xl md:text-2xl font-bold text-primary">We&apos;ve Walked This Path. We Know the Way.</p>
           </AnimateOnScroll>
         </div>
       </section>
 
       {/* ── SOLUTION PILLARS ── */}
-      <section id="solutions" className="py-24 bg-muted/20">
-        <div className="container mx-auto px-4">
-          <AnimateOnScroll className="text-center max-w-3xl mx-auto mb-14">
-            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-4">Our Pillars</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Four Paths. One Trusted Partner.</h2>
-            <p className="text-lg text-muted-foreground">Comprehensive solutions tailored to your unique journey and goals.</p>
+      <section id="solutions" className="py-24 section-bg-pillars">
+        <div className="container mx-auto px-4 relative z-10">
+          <AnimateOnScroll className="mb-14">
+            <SectionHeader
+              eyebrow="Our Pillars"
+              title={<>Four Paths.<br /><span className="text-primary">One Trusted Partner.</span></>}
+              subtitle="Comprehensive solutions tailored to your unique journey and goals."
+            />
           </AnimateOnScroll>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {TABS.map((tab, i) => (
@@ -408,7 +436,7 @@ export default function Home() {
                   whileHover={{ y: -10, transition: { duration: 0.25, ease: "easeOut" } }}
                   className="h-full"
                 >
-                  <Card className={`group border-none shadow-md hover:shadow-2xl transition-shadow duration-300 rounded-2xl overflow-hidden h-full bg-gradient-to-b from-card to-${tab.color}/5`}>
+                  <Card className="group border border-border/50 shadow-md hover:shadow-2xl transition-shadow duration-300 rounded-2xl overflow-hidden h-full bg-white">
                     <CardContent className="p-7 flex flex-col h-full">
                       <motion.div
                         whileHover={{ scale: 1.15, rotate: 5 }}
@@ -433,12 +461,14 @@ export default function Home() {
       </section>
 
       {/* ── HOW IT WORKS ── */}
-      <section id="process" className="py-24 bg-background">
-        <div className="container mx-auto px-4">
-          <AnimateOnScroll className="text-center max-w-3xl mx-auto mb-16">
-            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-4">The Process</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">A Proven Framework for Success</h2>
-            <p className="text-lg text-muted-foreground">Complex processes broken into clear, actionable steps.</p>
+      <section id="process" className="py-24 section-bg-process">
+        <div className="container mx-auto px-4 relative z-10">
+          <AnimateOnScroll className="mb-16">
+            <SectionHeader
+              eyebrow="The Process"
+              title={<>A Proven Framework<br /><span className="text-primary">for Your Success</span></>}
+              subtitle="Complex processes broken into clear, actionable steps."
+            />
           </AnimateOnScroll>
           {/* Animated connector line */}
           <div className="grid md:grid-cols-4 gap-8 relative">
@@ -482,12 +512,14 @@ export default function Home() {
       </section>
 
       {/* ── PROGRAMS TABBED ── */}
-      <section id="programs" className="py-24 bg-muted/20">
-        <div className="container mx-auto px-4">
-          <AnimateOnScroll className="text-center max-w-3xl mx-auto mb-6">
-            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-4">Programs</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">Tailored Solutions for Your Goals</h2>
-            <p className="text-lg text-muted-foreground">Select your path below to discover how PRAIT Consulting can facilitate your transition.</p>
+      <section id="programs" className="py-24 section-bg-programs">
+        <div className="container mx-auto px-4 relative z-10">
+          <AnimateOnScroll className="mb-6">
+            <SectionHeader
+              eyebrow="Programs"
+              title={<>Tailored Solutions<br /><span className="text-secondary">Built for Your Goals</span></>}
+              subtitle="Select your path below to discover how PRAIT Consulting can facilitate your transition."
+            />
           </AnimateOnScroll>
 
           {/* Tab Buttons */}
@@ -643,11 +675,14 @@ export default function Home() {
 
       {/* ── TESTIMONIALS ── */}
       <section id="testimonials" className="py-24 bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4">
-          <AnimateOnScroll className="text-center max-w-3xl mx-auto mb-14">
-            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/20 rounded-full px-4 py-1.5 mb-4">Success Stories</span>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">Lives Changed. Futures Built.</h2>
-            <p className="text-primary-foreground/70 text-lg">Real people. Real transformations. Hear from those who crossed borders and climbed ladders.</p>
+        <div className="container mx-auto px-4 relative z-10">
+          <AnimateOnScroll className="mb-14">
+            <SectionHeader
+              dark
+              eyebrow="Success Stories"
+              title={<>Lives Changed.<br />Futures Built.</>}
+              subtitle="Real people. Real transformations. Hear from those who crossed borders and climbed ladders."
+            />
           </AnimateOnScroll>
           <div className="grid md:grid-cols-3 gap-6">
             {[
@@ -682,12 +717,14 @@ export default function Home() {
       </section>
 
       {/* ── AI PATHWAY MATCHER ── */}
-      <section id="matcher" className="py-24 bg-gradient-to-br from-background to-muted/30">
-        <div className="container mx-auto px-4">
-          <AnimateOnScroll className="text-center max-w-3xl mx-auto mb-12">
-            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-4">AI-Powered</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">AI Career Pathway Matcher</h2>
-            <p className="text-lg text-muted-foreground">Not sure which program is right for you? Tell our AI assistant about your background and goals — it will recommend the perfect PRAIT pathway in seconds.</p>
+      <section id="matcher" className="py-24 section-bg-ai">
+        <div className="container mx-auto px-4 relative z-10">
+          <AnimateOnScroll className="mb-12">
+            <SectionHeader
+              eyebrow="AI-Powered"
+              title={<>Find Your Perfect Path<br /><span className="shimmer-gradient">in Seconds</span></>}
+              subtitle="Not sure which program is right for you? Tell our AI assistant about your background and goals — it will recommend the perfect PRAIT pathway instantly."
+            />
           </AnimateOnScroll>
 
           <AnimateOnScroll delay={0.1}>
@@ -831,12 +868,14 @@ export default function Home() {
       </section>
 
       {/* ── CONTACT FORM ── */}
-      <section id="contact" className="py-24 bg-muted/20">
-        <div className="container mx-auto px-4">
-          <AnimateOnScroll className="text-center max-w-3xl mx-auto mb-10">
-            <span className="inline-block text-xs font-bold uppercase tracking-widest text-accent bg-accent/10 rounded-full px-4 py-1.5 mb-4">Get Started</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">Ready to Map Your Route to Success?</h2>
-            <p className="text-lg text-muted-foreground">Book a free, zero-pressure consultation. Select your area of interest so we can connect you with the right expert.</p>
+      <section id="contact" className="py-24 section-bg-contact">
+        <div className="container mx-auto px-4 relative z-10">
+          <AnimateOnScroll className="mb-10">
+            <SectionHeader
+              eyebrow="Get Started"
+              title={<>Ready to Map Your Route<br /><span className="text-primary">to Success?</span></>}
+              subtitle="Book a free, zero-pressure consultation. Select your area of interest so we can connect you with the right expert."
+            />
           </AnimateOnScroll>
           <AnimateOnScroll delay={0.1}>
             <div className="max-w-5xl mx-auto bg-background rounded-3xl shadow-xl overflow-hidden border">
@@ -868,58 +907,89 @@ export default function Home() {
                   <form onSubmit={handleFormSubmit} className="space-y-5">
                     <div className="grid md:grid-cols-2 gap-5">
                       <div className="space-y-1.5">
-                        <Label htmlFor="name">Full Name <span className="text-accent">*</span></Label>
-                        <Input id="name" required placeholder="John Doe" className="rounded-lg bg-muted/40 border-transparent focus-visible:border-primary" data-testid="form-input-name" value={formData.name} onChange={e => setFormData(f => ({ ...f, name: e.target.value }))} />
+                        <Label htmlFor="firstName">First Name <span className="text-accent">*</span></Label>
+                        <Input id="firstName" required placeholder="John" className="rounded-lg bg-muted/40 border-transparent focus-visible:border-primary" data-testid="form-input-first-name" value={formData.firstName} onChange={e => setFormData(f => ({ ...f, firstName: e.target.value }))} />
                       </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="lastName">Last Name <span className="text-accent">*</span></Label>
+                        <Input id="lastName" required placeholder="Doe" className="rounded-lg bg-muted/40 border-transparent focus-visible:border-primary" data-testid="form-input-last-name" value={formData.lastName} onChange={e => setFormData(f => ({ ...f, lastName: e.target.value }))} />
+                      </div>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-5">
                       <div className="space-y-1.5">
                         <Label htmlFor="email">Email Address <span className="text-accent">*</span></Label>
                         <Input id="email" type="email" required placeholder="john@example.com" className="rounded-lg bg-muted/40 border-transparent focus-visible:border-primary" data-testid="form-input-email" value={formData.email} onChange={e => setFormData(f => ({ ...f, email: e.target.value }))} />
                       </div>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" className="rounded-lg bg-muted/40 border-transparent focus-visible:border-primary" data-testid="form-input-phone" value={formData.phone} onChange={e => setFormData(f => ({ ...f, phone: e.target.value }))} />
+                      <div className="space-y-1.5">
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" className="rounded-lg bg-muted/40 border-transparent focus-visible:border-primary" data-testid="form-input-phone" value={formData.phone} onChange={e => setFormData(f => ({ ...f, phone: e.target.value }))} />
+                      </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Residency Status <span className="text-accent">*</span> <span className="text-xs text-muted-foreground font-normal">(select all that apply)</span></Label>
-                      <div className="grid grid-cols-2 gap-2">
+                      <Label>Residency Status <span className="text-accent">*</span> <span className="text-xs text-muted-foreground font-normal">(select one)</span></Label>
+                      <RadioGroup
+                        value={formData.residency}
+                        onValueChange={val => setFormData(f => ({ ...f, residency: val }))}
+                        className="grid grid-cols-2 gap-2"
+                      >
                         {[
                           "Canadian Citizen",
                           "Permanent Resident",
                           "Work / Study Permit",
                           "International Student (Outside Canada)",
-                          "New Immigrant",
                           "Protected Person / Refugee",
                         ].map(opt => (
                           <div key={opt} className="flex items-center gap-2">
-                            <Checkbox
+                            <RadioGroupItem
                               id={`res-${opt}`}
-                              checked={formData.residency.includes(opt)}
-                              onCheckedChange={() => toggleResidency(opt)}
-                              data-testid={`form-check-res-${opt.toLowerCase().replace(/[\s/()]/g,"-")}`}
+                              value={opt}
+                              data-testid={`form-radio-res-${opt.toLowerCase().replace(/[\s/()]/g, "-")}`}
                             />
                             <label htmlFor={`res-${opt}`} className="text-sm cursor-pointer leading-tight">{opt}</label>
                           </div>
                         ))}
-                      </div>
+                      </RadioGroup>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>Employment Status <span className="text-accent">*</span> <span className="text-xs text-muted-foreground font-normal">(select all that apply)</span></Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {["Employed", "Unemployed", "Student", "Business Owner", "Corporate Representative"].map(opt => (
+                      <Label>Employment Status <span className="text-accent">*</span> <span className="text-xs text-muted-foreground font-normal">(select one)</span></Label>
+                      <RadioGroup
+                        value={formData.employment}
+                        onValueChange={val => setFormData(f => ({ ...f, employment: val }))}
+                        className="flex flex-wrap gap-4"
+                      >
+                        {["Employed", "Unemployed"].map(opt => (
                           <div key={opt} className="flex items-center gap-2">
-                            <Checkbox
+                            <RadioGroupItem
                               id={`emp-${opt}`}
-                              checked={formData.employment.includes(opt)}
-                              onCheckedChange={() => toggleEmployment(opt)}
-                              data-testid={`form-check-${opt.toLowerCase().replace(/\s/g,"-")}`}
+                              value={opt}
+                              data-testid={`form-radio-emp-${opt.toLowerCase()}`}
                             />
                             <label htmlFor={`emp-${opt}`} className="text-sm cursor-pointer">{opt}</label>
                           </div>
                         ))}
-                      </div>
+                      </RadioGroup>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Profile <span className="text-accent">*</span> <span className="text-xs text-muted-foreground font-normal">(which best describes you? — select one)</span></Label>
+                      <RadioGroup
+                        value={formData.profile}
+                        onValueChange={val => setFormData(f => ({ ...f, profile: val }))}
+                        className="grid grid-cols-2 gap-2"
+                      >
+                        {["Student", "Individual", "Business Owner", "Corporate Representative"].map(opt => (
+                          <div key={opt} className="flex items-center gap-2">
+                            <RadioGroupItem
+                              id={`profile-${opt}`}
+                              value={opt}
+                              data-testid={`form-radio-profile-${opt.toLowerCase().replace(/\s/g, "-")}`}
+                            />
+                            <label htmlFor={`profile-${opt}`} className="text-sm cursor-pointer leading-tight">{opt}</label>
+                          </div>
+                        ))}
+                      </RadioGroup>
                     </div>
 
                     <div className="space-y-1.5">
@@ -929,10 +999,11 @@ export default function Home() {
                           <SelectValue placeholder="What do you need help with?" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="study">Start a Career in Canada</SelectItem>
-                          <SelectItem value="international">Study Internationally</SelectItem>
-                          <SelectItem value="train">Corporate Training & Upskilling</SelectItem>
-                          <SelectItem value="business">Business Consulting</SelectItem>
+                          <SelectItem value="funded-career-programs">Funded Career Programs (for Domestic Students)</SelectItem>
+                          <SelectItem value="international-admissions">International Admissions & Support</SelectItem>
+                          <SelectItem value="corporate-training">Corporate Training</SelectItem>
+                          <SelectItem value="upskilling-bootcamps">Upskilling Bootcamps</SelectItem>
+                          <SelectItem value="business-consulting">Business Consulting</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
