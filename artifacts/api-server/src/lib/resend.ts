@@ -2,13 +2,13 @@ import { Resend } from "resend";
 
 let connectionSettings: { settings: { api_key: string; from_email: string } } | null = null;
 
-async function getCredentials(): Promise<{ apiKey: string; fromEmail: string }> {
+async function getReplitCredentials(): Promise<{ apiKey: string; fromEmail: string }> {
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? "repl " + process.env.REPL_IDENTITY
     : process.env.WEB_REPL_RENEWAL
-    ? "depl " + process.env.WEB_REPL_RENEWAL
-    : null;
+      ? "depl " + process.env.WEB_REPL_RENEWAL
+      : null;
 
   if (!xReplitToken) {
     throw new Error("X-Replit-Token not found for repl/depl");
@@ -25,7 +25,7 @@ async function getCredentials(): Promise<{ apiKey: string; fromEmail: string }> 
         Accept: "application/json",
         "X-Replit-Token": xReplitToken,
       },
-    }
+    },
   )
     .then((res) => res.json())
     .then((d: { items?: typeof connectionSettings[] }) => d.items?.[0]);
@@ -40,6 +40,17 @@ async function getCredentials(): Promise<{ apiKey: string; fromEmail: string }> 
     apiKey: connectionSettings.settings.api_key,
     fromEmail: connectionSettings.settings.from_email,
   };
+}
+
+async function getCredentials(): Promise<{ apiKey: string; fromEmail: string }> {
+  const apiKey = process.env.RESEND_API_KEY;
+  const fromEmail = process.env.RESEND_FROM_EMAIL;
+
+  if (apiKey && fromEmail) {
+    return { apiKey, fromEmail };
+  }
+
+  return getReplitCredentials();
 }
 
 export async function getUncachableResendClient() {

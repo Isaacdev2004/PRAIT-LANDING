@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { openai } from "@workspace/integrations-openai-ai-server";
+import { getOpenAI } from "@workspace/integrations-openai-ai-server";
 
 const matcherRouter = Router();
 
@@ -65,8 +65,8 @@ My skills: ${skills || "Not specified"}
 What I'm looking for: ${goals}`;
 
   try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-5-mini",
+    const completion = await getOpenAI().chat.completions.create({
+      model: process.env.OPENAI_MODEL ?? "gpt-4o-mini",
       max_completion_tokens: 2048,
       messages: [
         { role: "system", content: systemPrompt },

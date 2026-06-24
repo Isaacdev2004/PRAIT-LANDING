@@ -1,18 +1,32 @@
 import OpenAI from "openai";
 
-if (!process.env.AI_INTEGRATIONS_OPENAI_BASE_URL) {
-  throw new Error(
-    "AI_INTEGRATIONS_OPENAI_BASE_URL must be set. Did you forget to provision the OpenAI AI integration?",
-  );
+let client: OpenAI | undefined;
+
+export function getOpenAI(): OpenAI {
+  if (client) return client;
+
+  const apiKey =
+    process.env.OPENAI_API_KEY ?? process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+  const baseURL =
+    process.env.OPENAI_BASE_URL ?? process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
+
+  if (!apiKey) {
+    throw new Error(
+      "OPENAI_API_KEY must be set. Add it in your Render environment variables.",
+    );
+  }
+
+  client = new OpenAI({
+    apiKey,
+    ...(baseURL ? { baseURL } : {}),
+  });
+
+  return client;
 }
 
-if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
-  throw new Error(
-    "AI_INTEGRATIONS_OPENAI_API_KEY must be set. Did you forget to provision the OpenAI AI integration?",
-  );
-}
-
-export const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+/** @deprecated Use getOpenAI() so missing keys fail at request time, not import time. */
+export const openai = new Proxy({} as OpenAI, {
+  get(_target, prop) {
+    return Reflect.get(getOpenAI(), prop);
+  },
 });
