@@ -36,7 +36,11 @@ app.use("/api", router);
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(staticDir));
 
-  app.get("*", (req: Request, res: Response, next: NextFunction) => {
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      next();
+      return;
+    }
     if (req.path.startsWith("/api")) {
       next();
       return;
